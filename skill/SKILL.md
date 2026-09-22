@@ -274,7 +274,7 @@ python upload_repo.py --token <PAT> --repo <owner>/<name> --message "..." \
 - **仓库必须 public**：私有仓库的 raw 地址要认证，Surge 拉不到。
 - **引用优先 Raw GitHub**：`https://raw.githubusercontent.com/<user>/<repo>/main/<file>`。官方直读源，不经第三方 CDN，文件增删改名后与仓库一致；代价是**国内常被墙**，用的人要能直连 GitHub。注意 raw 自身也有边缘缓存（见上「上传后如何确认生效」）—— 本轮实测推送后 raw 约 **3 分钟**才同步，且 `?v=` 对它无效，**别拿 raw 当"已生效"的判据**。
 - **备用 jsDelivr 镜像**：`https://cdn.jsdelivr.net/gh/<user>/<repo>@main/<file>`。国内直连更稳；多一层第三方缓存，更新同步更慢、删文件后须 purge 才 404。
-- **README 与配置片段里两种地址都要给，且 Raw 在前**（不要只给 jsDelivr）：每个规则文件各给一块 fenced 代码块（GitHub 自带复制按钮）—— ⭐ 首选 Raw、🔁 备用 jsDelivr；配置片段里写 Raw，备用源的换法写在片段下方的说明行里。README 里不要出现"只推荐一个、另一个自求多福"的写法，也不要把备用源塞进小字备注（给了等于没给）。
+- **README 里两种地址都要给，且 Raw 在前**（不要只给 jsDelivr）。版式按这条来：**一张总览表 + 每个源一块 fenced 地址块** —— 表格（客户端 / 文件 / 格式 / 条数 / 用途）一眼看全所有文件，然后 ⭐ 首选 Raw 一块（每行一个完整 URL）、🔁 备用 jsDelivr 一块。GitHub 的 fenced 块自带复制按钮，**但别给每个文件各拆一块**：4 份 × 2 源 = 8 块，标题 / 条数 / 说明夹在块与块之间，读者找不到头（2026-09-22 返工一次，8 块 → 2 块）。也别把备用源塞进小字备注（给了等于没给）。配置片段里写 Raw，备用源的换法写在片段下方的说明行里。README 里不要出现"只推荐一个、另一个自求多福"的写法。
   - **例外：第三方规则集只给 Raw 源。** 它由别人托管、缓存我们 purge 不了，多列一个 jsDelivr 备用等于把对方的缓存层写进我们的文档，出问题也解释不清（2026-09-22 用户口径）。本仓做法见 README「搭配：AWAvenue-Ads-Rule」节。
 - **删除文件后必须 purge jsDelivr 缓存**：CDN 会继续提供已删文件（`raw` 已 404，但 `cdn.jsdelivr.net` 仍返回 200，两者不一致）。逐文件请求 `https://purge.jsdelivr.net/gh/<user>/<repo>@main/<file>`，返回 `"status": "finished"` 即生效，之后即 404。
 - **删旧文件前先确认引用方已迁移**：规则集 URL 404 会导致客户端拉取失败。若无法确认，宁可保留旧文件并在 README 标注废弃（本次用户明确要求删除才删）。删除时保持**仓库名、文件名、CDN 域名不变**，只移除旧文件。

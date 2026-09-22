@@ -16,75 +16,36 @@
 
 ## 📥 规则集
 
-⭐ **首选 Raw GitHub** —— 官方直读源，不经第三方 CDN；文件增删改名后与仓库一致
+四份文件，两个源，内容完全一致，任选其一。
 
-🔁 **备用 jsDelivr CDN** —— 国内直连更稳；代价是多一层第三方缓存，删文件后仍会返回旧内容（须 purge）
-
-两源内容完全一致，任选其一。
-
-🔷 **mihomo / OpenClash**
-
-黑名单 · 3889 条
-
-⭐ 首选 · Raw GitHub
-
-```
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
-```
-
-🔁 备用 · jsDelivr CDN
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
-```
-
-白名单 · 43 条 · 与黑名单配套
-
-⭐ 首选 · Raw GitHub
-
-```
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml
-```
-
-🔁 备用 · jsDelivr CDN
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
-```
-
-🔶 **Surge**
-
-黑名单 · 3889 条
-
-⭐ 首选 · Raw GitHub
-
-```
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
-```
-
-🔁 备用 · jsDelivr CDN
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
-```
-
-白名单 · 43 条 · 与黑名单配套
-
-⭐ 首选 · Raw GitHub
-
-```
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
-```
-
-🔁 备用 · jsDelivr CDN
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
-```
+| 客户端 | 文件 | 格式 | 条数 | 用途 |
+|:-------|:-----|:-----|-----:|:-----|
+| mihomo / OpenClash | `mihomo-ads.yaml` | `classical` | 3889 | 黑名单 · 拦截 |
+| mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 43 | 白名单 · 放行 |
+| Surge | `surge-ads.list` | `RULE-SET` | 3889 | 黑名单 · 拦截 |
+| Surge | `surge-white-guard.list` | `RULE-SET` | 43 | 白名单 · 放行 |
 
 白名单 = 上游白名单（325 条）中会被黑名单命中的 42 条，加 1 条手工补充。
 
-四份文件路径一一对应，切源只换前缀：`raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` ⇄ `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
+⭐ **首选 · Raw GitHub** —— 官方直读源，不经第三方 CDN；文件增删改名后与仓库一致
+
+```
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+```
+
+🔁 **备用 · jsDelivr CDN** —— 国内直连更稳；代价是多一层第三方缓存，删文件后仍会返回旧内容（须 purge）
+
+```
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
+```
+
+两源路径一一对应，切源只换前缀：`raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` ⇄ `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
 
 ⚠️ 两源都有一层缓存，**别指望推送后立刻可见**：本轮实测 raw 也要约 3 分钟才同步，且 `?v=<日期>` 对 raw 无效 —— 真要确认生效，权威判据是 GitHub Contents API。jsDelivr 缓存更厚，急用加 `?v=<日期>` 或走 purge 接口。
 
@@ -94,17 +55,19 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 
 ⚠️ 判定标准与 Jinx 不同：叠加后上游 Jinx 白名单中有 8 个域会被它拦掉（实测，随它每日更新的快照浮动）。
 
-本体地址（第三方规则，由对方托管 —— 此处只给 Raw 源）：
+由对方托管，故只给 Raw 源：
 
-🔷 **mihomo / OpenClash** · `Clash-Classical`
+| 客户端 | 格式 | 条数 | 说明 |
+|:-------|:-----|-----:|:-----|
+| mihomo / OpenClash | `classical` | 965 | 文件 `AWAvenue-Ads-Rule-Clash-Classical.yaml` |
+| Surge | `RULE-SET` | 965 | 文件 `AWAvenue-Ads-Rule-Surge-RULE-SET.list` |
+
+条数为上游自报值（其文件头 `#Total lines`），随它每日快照浮动。
+
+⭐ **Raw GitHub**（顺序同表格）
 
 ```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
-```
-
-🔶 **Surge** · `RULE-SET`
-
-```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
 ```
 
