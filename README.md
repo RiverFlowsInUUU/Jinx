@@ -16,7 +16,7 @@
 
 ## 📥 订阅
 
-四份文件，两个源，内容完全一致；末两行是第三方的秋风广告规则，可叠加。
+📦 四份文件，两个源，内容完全一致；末两行是第三方的秋风广告规则，可叠加。
 
 | 客户端 | 文件 | 条数 | 用途 |
 |:-------|:-----|-----:|:-----|
@@ -27,7 +27,7 @@
 | mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 · 秋风 |
 | Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 · 秋风 |
 
-**Raw GitHub** · 首选
+⭐ **Raw GitHub** · 首选
 
 ```
 https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
@@ -36,7 +36,7 @@ https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
 https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
 ```
 
-**jsDelivr** · 备用
+🔁 **jsDelivr** · 备用
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
@@ -45,9 +45,9 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 ```
 
-换备用源：把 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
+🔀 换备用源：把 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
 
-**AWAvenue 秋风广告规则** · 第三方 · 可叠加 · 仅给 Raw 源
+🤝 **AWAvenue 秋风广告规则** · 第三方 · 可叠加 · 仅给 Raw 源
 
 ⚠️ 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。由对方托管，缓存不归我们管，故不列备用源。
 
@@ -56,9 +56,9 @@ https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWA
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
 ```
 
-## 🔧 接入
+## 🔌 接入
 
-**mihomo / OpenClash**
+🔷 **mihomo / OpenClash**
 
 ```yaml
 rule-providers:
@@ -84,7 +84,7 @@ rules:
   # 其余规则接在后面
 ```
 
-**Surge**
+🔶 **Surge**
 
 ```
 [Rule]
@@ -95,25 +95,25 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 # 其余规则接在后面
 ```
 
-`pre-matching` 把 REJECT 提前到 DNS / 连接建立阶段，`extended-matching` 按 TLS SNI / HTTP Host 额外匹配，处理 App 直连 IP 的情况 —— 两者都只对 REJECT 系策略生效。
+💡 `pre-matching` 把 REJECT 提前到 DNS / 连接建立阶段，`extended-matching` 按 TLS SNI / HTTP Host 额外匹配，处理 App 直连 IP 的情况 —— 两者都只对 REJECT 系策略生效。
 
-叠加秋风规则时，把它排在 Jinx **之后**。
+📌 叠加秋风规则时，把它排在 Jinx **之后**。
 
 ## 📋 规则顺序
 
-自上而下，先匹配先赢。
+🔽 自上而下，先匹配先赢。
 
 | 顺序 | 规则 | 去向 |
 |:-:|:-----|:-----|
-| 1 | 白名单 | `DIRECT` |
-| 2 | 广告拦截 | `REJECT` |
-| 3 | 常规分流（`GEOSITE,cn` / `GEOIP,cn`） | `DIRECT` |
+| 1 | 🛡️ 白名单 | `DIRECT` |
+| 2 | 🚫 广告拦截 | `REJECT` |
+| 3 | 🚦 常规分流（`GEOSITE,cn` / `GEOIP,cn`） | `DIRECT` |
 
-国内广告域名多数同时属于「中国大陆域名」—— `GEOSITE,cn` 若排到 `REJECT` 之前会先命中放行，广告规则再没有机会执行。
+⚠️ 国内广告域名多数同时属于「中国大陆域名」—— `GEOSITE,cn` 若排到 `REJECT` 之前会先命中放行，广告规则再没有机会执行。
 
 ## 🚧 OpenClash
 
-`绕过中国大陆 IP`（`china_ip_route`）默认常开。开着时目标属大陆的连接直接放行、**不进入内核**，规则不生效，日志里也没有记录。用本规则集要关掉它：
+📌 `绕过中国大陆 IP`（`china_ip_route`）默认常开。开着时目标属大陆的连接直接放行、**不进入内核**，规则不生效，日志里也没有记录。用本规则集要关掉它：
 
 ```bash
 uci set openclash.config.china_ip_route='0'
@@ -125,18 +125,18 @@ uci commit openclash
 
 | 文档 | 内容 |
 |:-----|:-----|
-| [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) | 白名单来源 · 两个源的缓存与生效判据 · 秋风对比 · 转换原理 · OpenClash 细节 |
-| [`skill/SKILL.md`](skill/SKILL.md) | 匹配语义判定 · 通配映射 · 白名单瘦身 · 生成命令 |
-| [`CHANGELOG.md`](CHANGELOG.md) | 规则变动记录 |
+| 📘 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) | 白名单来源 · 两个源的缓存与生效判据 · 秋风对比 · 转换原理 · OpenClash 细节 |
+| 🧪 [`skill/SKILL.md`](skill/SKILL.md) | 匹配语义判定 · 通配映射 · 白名单瘦身 · 生成命令 |
+| 🗓️ [`CHANGELOG.md`](CHANGELOG.md) | 规则变动记录 |
 
 ## 📚 来源与许可
 
-上游 [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules)（数据 `3.1.9` · `2026-09-15`，未声明许可）。规则数据版权归上游及其原始来源，本仓不主张任何权利；`skill/` 下的脚本与方法论不含上游数据，可自由取用。上游权利人如有异议，开 issue 即下架。
+📄 上游 [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules)（数据 `3.1.9` · `2026-09-15`，未声明许可）。规则数据版权归上游及其原始来源，本仓不主张任何权利；`skill/` 下的脚本与方法论不含上游数据，可自由取用。上游权利人如有异议，开 issue 即下架。
 
 ---
 
 <div align="center">
 
-数据来自 VME98/jinx-rules
+📊 数据来自 VME98/jinx-rules
 
 </div>
