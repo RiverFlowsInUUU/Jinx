@@ -56,9 +56,27 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads-delta.
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-white-guard.list
 ```
 
-差集版 = 完整版剔除与 AWAvenue 重叠的 53 条。守卫 = 上游 325 条白名单中会被黑名单命中的 42 条，加 1 条手工补充。
+差集版 = 完整版剔除 53 条。剔除只认「深度覆盖」：AWAvenue 得用 `DOMAIN-SUFFIX` / `DOMAIN-KEYWORD` 罩住该域**及其子域**才算 —— 它 965 条里 949 条是 `DOMAIN,` 精确匹配，挡不住子域，不作数。守卫 = 上游 325 条白名单中会被黑名单命中的 42 条，加 1 条手工补充。
 
 以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/jinx-ads-rules/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
+
+### 🤝 搭配：AWAvenue-Ads-Rule
+
+差集版剔除了 AWAvenue 能深度覆盖的 53 条，需与它并用。本体地址：
+
+🔷 **mihomo / OpenClash** · `Clash-Classical`
+
+```
+https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
+```
+
+🔶 **Surge** · `RULE-SET`
+
+```
+https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+```
+
+由 [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) 维护（GPL-3.0）· 更多格式见[官方订阅生成器](https://awavenue.top/Sub.html)。
 
 ---
 
@@ -190,26 +208,6 @@ jinx-ads-rules/
 - 📘 [`skill/SKILL.md`](skill/SKILL.md) —— 匹配语义判定 · 通配映射 · 差集逻辑 · 白名单瘦身 · 生成命令
 - 🧪 [`skill/scripts/convert_ruleset.py`](skill/scripts/convert_ruleset.py) —— 6 个规则文件的生成脚本
 - 🗓️ [`CHANGELOG.md`](CHANGELOG.md) —— 规则集变动记录
-
----
-
-## 🤝 搭配：AWAvenue-Ads-Rule
-
-差集版剔除了与 AWAvenue 重叠的条目，需与它并用。本体地址：
-
-🔷 **mihomo / OpenClash** · `Clash-Classical`
-
-```
-https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
-```
-
-🔶 **Surge** · `RULE-SET`
-
-```
-https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
-```
-
-由 [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) 维护（GPL-3.0）· 更多格式见[官方订阅生成器](https://awavenue.top/Sub.html)。
 
 ---
 
