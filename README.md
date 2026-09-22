@@ -16,9 +16,9 @@
 
 ## 📥 规则集
 
-⭐ **首选 Raw GitHub** —— 直读 `main` 分支，无 jsDelivr 那层 CDN 缓存，更新同步最快
+⭐ **首选 Raw GitHub** —— 官方直读源，不经第三方 CDN；文件增删改名后与仓库一致
 
-🔁 **备用 jsDelivr CDN** —— 国内直连更稳，代价是缓存更厚，更新后需数分钟才同步
+🔁 **备用 jsDelivr CDN** —— 国内直连更稳；代价是多一层第三方缓存，删文件后仍会返回旧内容（须 purge）
 
 两源内容完全一致，任选其一。
 
@@ -84,7 +84,9 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 
 白名单 = 上游白名单（325 条）中会被黑名单命中的 42 条，加 1 条手工补充。
 
-四份文件路径一一对应，切源只换前缀：`raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` ⇄ `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。jsDelivr 缓存急用时在末尾加 `?v=<日期>` 绕过。
+四份文件路径一一对应，切源只换前缀：`raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` ⇄ `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
+
+⚠️ 两源都有一层缓存，**别指望推送后立刻可见**：本轮实测 raw 也要约 3 分钟才同步，且 `?v=<日期>` 对 raw 无效 —— 真要确认生效，权威判据是 GitHub Contents API。jsDelivr 缓存更厚，急用加 `?v=<日期>` 或走 purge 接口。
 
 ### 🤝 搭配：AWAvenue-Ads-Rule
 

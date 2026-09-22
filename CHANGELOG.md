@@ -10,7 +10,8 @@
 
 - 🔗 **规则集地址改以 Raw GitHub 为首选源**：README 原先六处地址只给 jsDelivr，raw 仅在小字里带一句。改为**每个文件各给一块可复制地址**（⭐ 首选 Raw GitHub / 🔁 备用 jsDelivr CDN），4 份规则文件 + AWAvenue 2 处共 12 个地址全部列出；`## 🔷 mihomo / OpenClash` 与 `## 🔶 Surge` 的配置片段同步以 raw 为主，备用源的换法写在片段下方的说明行里；`skill/SKILL.md` 的「引用优先 …」条目与「对外交付 · 双地址」一并翻正。
   - 📌 **只调整推荐次序与呈现方式，地址字符串本身未变** —— 已订阅的地址一律无需改动。本轮 12 个地址实测全部 **HTTP 200**（含 AWAvenue 侧）。
-  - 📌 依据：raw 直读 `main`，无 jsDelivr 那层 CDN 缓存，更新同步最快；jsDelivr 缓存更厚（更新后需数分钟才同步）但国内直连更稳 —— 保留为备用，不再当默认。
+  - 📌 依据：raw 是官方直读源，不经第三方 CDN，文件增删改名后与仓库一致、无需 purge；jsDelivr 多一层第三方缓存（删文件后不 purge 仍返回旧内容），但国内直连更稳 —— 保留为备用，不再当默认。
+  - ⚠️ 实测补充：raw **不是**"推送即生效" —— 本轮推送后 raw 仍返回旧版，约 **3 分钟**才同步，`?v=<日期>` 对它无效。判断是否生效只能说 GitHub Contents API；这一条已写进 README 与 `skill/SKILL.md`。
 
 - 🏷️ **仓库名大小写规范化：`jinx-ads-rules` → `Jinx`** —— 与姊妹仓 `Surge` / `Egern` 的命名风格统一，也与上游项目名（`VME98/jinx-rules` 的 **Jinx**）一致。仓内 19 处引用已更新（README 订阅地址 / skill / 转换脚本）。
   - ⚠️ **旧地址实测全部仍可用**：`raw.githubusercontent.com` 与 jsDelivr 的旧名均 **HTTP 200**、`github.com` 旧名 **HTTP 301** → 新名 ⇒ **已订阅的地址无需改动**。
