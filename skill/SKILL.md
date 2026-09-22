@@ -1,6 +1,6 @@
 ---
 name: adblock-ruleset-port
-description: 把第三方广告/域名规则源（Jinx、AdGuard、anti-AD、GOODBYEADS 等）转换并移植到 mihomo(OpenClash) / Surge / QuantumultX，含通配语义映射、覆盖度实测、白名单瘦身(guard list)、引用配置写法与规则顺序陷阱、规则仓库托管与 README 交付规范。触发词：规则集移植、黑名单转 clash、广告规则转 surge、jinx 规则、DOMAIN-WILDCARD、rule-provider behavior、去广告规则引用、AWAvenue、白名单瘦身、规则仓库 readme。
+description: 把第三方广告/域名规则源（Jinx、AdGuard、anti-AD、GOODBYEADS 等）转换并移植到 mihomo(OpenClash) / Surge / QuantumultX，含通配语义映射、覆盖度实测、白名单瘦身(guard list)、引用配置写法与规则顺序陷阱、规则仓库托管与 README 交付规范。触发词：规则集移植、黑名单转 clash、广告规则转 Surge、Jinx 规则、DOMAIN-WILDCARD、rule-provider behavior、去广告规则引用、AWAvenue、白名单瘦身、规则仓库 readme。
 agent_created: true
 ---
 
@@ -93,7 +93,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 
 ## 完整生成（两条命令产出全部 4 个文件）
 
-`jinx-ads-rules` 的实际重跑流程。先取上游源文件：
+`Jinx` 的实际重跑流程。先取上游源文件：
 
 ```bash
 mkdir -p jinx-rules && cd jinx-rules
@@ -241,7 +241,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
    - **Surge**：`pre-matching` 只能跟 REJECT 系策略（DIRECT 加它无效）；`extended-matching` 是"App 直连 IP 时按 TLS SNI / HTTP Host 兜底匹配"的关键，缺了它域名规则会大批失效。
    - 通用验收三步：① DNS 应答从真实 IP 变 fake-ip；② 请求被拒（连接/TLS 失败）；③ 日志出现 `match RuleSet(<名字>) … using REJECT`。
 
-参考实现：`jinx-ads-rules` 仓库 README 的 §五「OpenClash 实战陷阱」即为该块的标准写法。
+参考实现：`Jinx` 仓库 README 的 §五「OpenClash 实战陷阱」即为该块的标准写法。
 
 
 ## 托管到公网（Surge 必需）
@@ -249,7 +249,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 Surge 只能引用 **URL 或本地文件**；mihomo 可用本地文件。用 `scripts/upload_to_github.py` 一步建库并上传：
 
 ```bash
-python upload_to_github.py --token <PAT> --repo jinx-ads-rules --files a.list b.list
+python upload_to_github.py --token <PAT> --repo Jinx --files a.list b.list
 ```
 
 **仓库已存在、只想增量更新（含 `skill/` 等子目录）时用 `scripts/upload_repo.py`**：

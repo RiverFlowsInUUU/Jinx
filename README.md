@@ -7,9 +7,9 @@
 *上游 Jinx 黑/白名单的格式翻译，规则一条不增不减*
 
 [![Source](https://img.shields.io/badge/Source-Jinx%203.1.9-8250df?style=flat-square)](https://github.com/VME98/jinx-rules)
-[![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
-[![Surge](https://img.shields.io/badge/Surge-RULE--SET-orange?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
-[![Rules](https://img.shields.io/badge/Ads-3889-0969da?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
+[![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](https://github.com/RiverFlowsInUUU/Jinx)
+[![Surge](https://img.shields.io/badge/Surge-RULE--SET-orange?style=flat-square)](https://github.com/RiverFlowsInUUU/Jinx)
+[![Rules](https://img.shields.io/badge/Ads-3889-0969da?style=flat-square)](https://github.com/RiverFlowsInUUU/Jinx)
 [![License](https://img.shields.io/badge/License-%E6%9C%AA%E5%A3%B0%E6%98%8E-critical?style=flat-square)](#-来源与许可)
 
 </div>
@@ -21,13 +21,13 @@
 黑名单 · 3889 条
 
 ```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads.yaml
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
 ```
 
 白名单 · 43 条 · 与黑名单配套
 
 ```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-guard.yaml
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
 ```
 
 🔶 **Surge**
@@ -35,18 +35,18 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-gua
 黑名单 · 3889 条
 
 ```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads.list
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
 ```
 
 白名单 · 43 条 · 与黑名单配套
 
 ```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-white-guard.list
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 ```
 
 白名单 = 上游白名单（325 条）中会被黑名单命中的 42 条，加 1 条手工补充。
 
-以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/jinx-ads-rules/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
+以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
 
 ### 🤝 搭配：AWAvenue-Ads-Rule
 
@@ -82,7 +82,7 @@ rule-providers:
     type: http
     behavior: classical          # 不用 domain
     format: yaml                 # 文件是顶层 payload 列表
-    url: "https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads.yaml"
+    url: "https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml"
     path: ./rule_provider/jinx-ads.yaml
     interval: 86400
 
@@ -90,7 +90,7 @@ rule-providers:
     type: http
     behavior: classical
     format: yaml
-    url: "https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-guard.yaml"
+    url: "https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml"
     path: ./rule_provider/jinx-white-guard.yaml
     interval: 86400
 
@@ -109,9 +109,9 @@ rules:
 ```
 [Rule]
 # 白名单（精确放行）
-RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-white-guard.list,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list,DIRECT
 # 广告拦截
-RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads.list,REJECT,pre-matching,extended-matching
+RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list,REJECT,pre-matching,extended-matching
 # 其余规则接在后面
 ```
 
@@ -173,7 +173,7 @@ uci commit openclash
 ## 📁 文件结构
 
 ```
-jinx-ads-rules/
+Jinx/
 ├── 🔷 mihomo-*.yaml      # 2 份：黑名单 / 白名单
 ├── 🔶 surge-*.list       # 2 份，与 mihomo 一一对应
 ├── ✍️ custom-*.list      # 2 份人工维护源（--extra / --extra-white）

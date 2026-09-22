@@ -8,6 +8,10 @@
 
 **变更**
 
+- 🏷️ **仓库名大小写规范化：`jinx-ads-rules` → `Jinx`** —— 与姊妹仓 `Surge` / `Egern` 的命名风格统一，也与上游项目名（`VME98/jinx-rules` 的 **Jinx**）一致。仓内 19 处引用已更新（README 订阅地址 / skill / 转换脚本）。
+  - ⚠️ **旧地址实测全部仍可用**：`raw.githubusercontent.com` 与 jsDelivr 的旧名均 **HTTP 200**、`github.com` 旧名 **HTTP 301** → 新名 ⇒ **已订阅的地址无需改动**。
+  - 📌 **文件名与 provider 名保持原样**：`surge-ads.list` / `surge-white-guard.list`、mihomo 侧 provider 名 `jinx-ads` / `jinx-white-guard` 属标识符，未动；上游 `VME98/jinx-rules` 未动。
+
 - 🔧 mihomo 侧文件名 `.list` → `.yaml`，内容改为顶层 `payload` 列表。`.list` 是 Surge / Quantumult 的惯例，mihomo 的 `format` 默认就是 `yaml` —— 沿用 `.list` 会让抄配置的人漏写 `format`（按 yaml 解析直接报错），或被迫写一条多余的 `format: text`。**mihomo 旧地址失效**，Surge 侧文件名不变。
 - 🔢 黑名单 3891 → **3889** 条（见下「移除」）。
 - 🏷️ 术语调整：「完整版」→「**黑名单**」，「白名单守卫」→「**白名单**」。差集版删除后「完整」已失去对照物 —— 它只是相对差集才显得"完整"，不如按语义直呼。**文件名与订阅地址一个字未改**（`mihomo-ads.yaml` / `surge-ads.list` / `*-white-guard.*` 照旧），已订阅的不受影响。

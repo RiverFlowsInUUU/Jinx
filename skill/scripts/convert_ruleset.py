@@ -26,7 +26,7 @@
   # 输出命名
   --naming classic (默认)  mihomo-<tag>-classical.yaml / surge-<tag>-ruleset.list
   --naming repo             mihomo-<tag>.yaml / surge-<tag>.list
-                            (与 jinx-ads-rules 等已托管仓库文件名一致, 可直接覆盖上传)
+                            (与 Jinx 等已托管仓库文件名一致, 可直接覆盖上传)
 
 产出:
   mihomo-<tag>-classical.yaml   behavior: classical, format: yaml, 100% 保真
