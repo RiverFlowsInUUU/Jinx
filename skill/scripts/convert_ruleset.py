@@ -5,9 +5,6 @@
   python convert_ruleset.py --src ./jinx-rules --out ./converted \\
       --fixed blacklist.txt --wild blacklist_wildcard.txt --tag ads
 
-  # 与现用规则集做差集(仅当对方"深度覆盖"该条目时才剔除, 见下)
-  python convert_ruleset.py ... --delta-ref https://.../AWAvenue-Ads-Rule-Clash-Classical.yaml
-
   # 白名单瘦身 -- 只保留真正会被黑名单误杀的条目(guard list)
   python convert_ruleset.py --src ./jinx-rules --out ./converted \\
       --fixed whitelist.txt --wild whitelist_wildcard.txt --tag white-guard \\
@@ -19,11 +16,11 @@
 
   # 自定义追加(让手工补的规则在上游更新后依然存活)
   --extra ./custom-ads.list
-      把该文件里的域名并入条目池末尾, 再参与 guard/delta 过滤, 与上游条目同等对待。
+      把该文件里的域名并入条目池末尾, 再参与 guard 过滤, 与上游条目同等对待。
       上游没有、但你需要拦的域名请写在这里, 而不是手改 mihomo-*.yaml(重跑即被覆盖)。
 
   --extra-white ./custom-direct.list
-      直连域, 追加在 guard/delta 之后, 强制 DOMAIN-SUFFIX, 不参与任何裁剪。
+      直连域, 追加在 guard 之后, 强制 DOMAIN-SUFFIX, 不参与任何裁剪。
       上游没放行、但实测必须直连的功能域写在这里(写 *.x.com 即放行 x.com 及全部子域)。
 
   # 输出命名
@@ -118,40 +115,6 @@ def mihomo_yaml(header, rules):
     return header + 'payload:\n' + body
 
 
-def parse_reference(ref):
-    """解析现用规则集, 返回 (covered_deep, stats)。
-
-    covered_deep(entry): 仅当对方能用 *深度语义*(DOMAIN-SUFFIX / DOMAIN-KEYWORD /
-    带通配)覆盖该条目及其子域时才为 True。对方仅用 DOMAIN 精确覆盖时返回 False ——
-    因为那样只能挡住该域名本身, 子域仍会漏, 不能作为剔除理由。
-    """
-    exact, suffix, keyword = set(), set(), set()
-    for line in read_text(ref).splitlines():
-        line = line.strip().lstrip('-').strip()
-        if not line or line.startswith('#') or line.startswith('//') or ',' not in line:
-            continue
-        parts = [p.strip() for p in line.split(',')]
-        rtype, value = parts[0].upper(), parts[1].strip('\'"').lower()
-        if rtype == 'DOMAIN':
-            exact.add(value)
-        elif rtype == 'DOMAIN-SUFFIX':
-            suffix.add(value)
-        elif rtype == 'DOMAIN-KEYWORD':
-            keyword.add(value)
-        elif rtype in ('DOMAIN-WILDCARD', 'DOMAIN-REGEX'):
-            suffix.add(value)
-
-    def covered_deep(entry):
-        e = entry[2:] if entry.startswith('*.') else entry
-        if any(e == s or e.endswith('.' + s) for s in suffix):
-            return True
-        if any(k in e for k in keyword):
-            return True
-        return False
-
-    return covered_deep, (len(exact), len(suffix), len(keyword))
-
-
 def build_blacklist_matcher(fixed_paths, wild_paths):
     """构造黑名单碰撞检测器: 判断某白名单条目是否会被这套黑名单误杀。
 
@@ -201,14 +164,13 @@ def main():
                          'repo=mihomo-<tag>.yaml / surge-<tag>.list (与已托管仓库的文件名一致, 便于直接覆盖)')
     ap.add_argument('--mode', choices=['suffix', 'exact'], default='suffix',
                     help='普通条目的匹配语义; 黑名单用 suffix, 白名单用 exact')
-    ap.add_argument('--delta-ref', help='现用规则集(URL 或本地路径), 给出则只输出差集')
     ap.add_argument('--extra', nargs='*',
                     help='手工追加的域名文件(相对 cwd, 或相对 --src 目录)。'
-                         '内容并入条目池末尾, 参与后续 guard/delta 过滤。'
+                         '内容并入条目池末尾, 参与后续 guard 过滤。'
                          '用途: 让"自己补的规则"在上游更新、重新生成后依然存活')
     ap.add_argument('--extra-white', nargs='*',
                     help='手工追加的直连域名文件(路径解析同 --extra)。'
-                         '在 guard/delta 之后追加, 强制 DOMAIN-SUFFIX, 不参与任何裁剪。'
+                         '在 guard 之后追加, 强制 DOMAIN-SUFFIX, 不参与任何裁剪。'
                          '用途: 上游未放行、但实测必须直连的功能域')
     ap.add_argument('--guard-against-fixed', nargs='*', help='黑名单精确域名文件, 给出则只保留会被其误杀的白名单条目')
     ap.add_argument('--guard-against-wild', nargs='*', help='黑名单通配域名文件, 同上')
@@ -258,14 +220,7 @@ def main():
               % (before, len(kept), before - len(kept)))
         entries = [k[0] for k in kept]
 
-    if args.delta_ref:
-        covered, stat = parse_reference(args.delta_ref)
-        print('参照规则集: DOMAIN=%d SUFFIX/通配=%d KEYWORD=%d' % stat)
-        before = len(entries)
-        entries = [e for e in entries if not covered(e)]
-        print('差集(仅剔除被对方深度覆盖的): %d -> %d (-%d)' % (before, len(entries), before - len(entries)))
-
-    # --extra-white: 直连域, 追加在 guard/delta 之后, 不参与任何裁剪
+    # --extra-white: 直连域, 追加在 guard 之后, 不参与任何裁剪
     forced, extra_white_names = [], []
     if args.extra_white:
         for name in args.extra_white:

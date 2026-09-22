@@ -9,7 +9,7 @@
 [![Source](https://img.shields.io/badge/Source-Jinx%203.1.9-8250df?style=flat-square)](https://github.com/VME98/jinx-rules)
 [![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
 [![Surge](https://img.shields.io/badge/Surge-RULE--SET-orange?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
-[![Rules](https://img.shields.io/badge/Ads-3891%20%7C%203838-0969da?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
+[![Rules](https://img.shields.io/badge/Ads-3889-0969da?style=flat-square)](https://github.com/RiverFlowsInUUU/jinx-ads-rules)
 [![License](https://img.shields.io/badge/License-%E6%9C%AA%E5%A3%B0%E6%98%8E-critical?style=flat-square)](#-来源与许可)
 
 </div>
@@ -18,19 +18,13 @@
 
 🔷 **mihomo / OpenClash**
 
-完整版 · 3891 条
+完整版 · 3889 条
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads.yaml
 ```
 
-差集版 · 3838 条 · 搭配 AWAvenue
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads-delta.yaml
-```
-
-白名单守卫 · 43 条 · 与上面任一配套
+白名单守卫 · 43 条 · 与完整版配套
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-guard.yaml
@@ -38,31 +32,29 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-gua
 
 🔶 **Surge**
 
-完整版 · 3891 条
+完整版 · 3889 条
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads.list
 ```
 
-差集版 · 3838 条 · 搭配 AWAvenue
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads-delta.list
-```
-
-白名单守卫 · 43 条 · 与上面任一配套
+白名单守卫 · 43 条 · 与完整版配套
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-white-guard.list
 ```
 
-差集版 = 完整版剔除 53 条。剔除只认「深度覆盖」：AWAvenue 得用 `DOMAIN-SUFFIX` / `DOMAIN-KEYWORD` 罩住该域**及其子域**才算 —— 它 965 条里 949 条是 `DOMAIN,` 精确匹配，挡不住子域，不作数。守卫 = 上游 325 条白名单中会被黑名单命中的 42 条，加 1 条手工补充。
+守卫 = 上游 325 条白名单中会被黑名单命中的 42 条，加 1 条手工补充。
 
 以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/jinx-ads-rules/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
 
 ### 🤝 搭配：AWAvenue-Ads-Rule
 
-差集版剔除了 AWAvenue 能深度覆盖的 53 条，需与它并用。本体地址：
+独立的第三方去广告规则集，与本文规则集无依赖，可叠加使用 —— Jinx 未收录的广告域由它补齐。
+
+⚠️ 判定标准与 Jinx 不同：叠加后上游 Jinx 白名单中有 8 个域会被它拦掉（实测，随它每日更新的快照浮动）。
+
+本体地址：
 
 🔷 **mihomo / OpenClash** · `Clash-Classical`
 
@@ -180,8 +172,8 @@ uci commit openclash
 
 ```
 jinx-ads-rules/
-├── 🔷 mihomo-*.yaml      # 3 份：完整版 / 差集版 / 白名单守卫
-├── 🔶 surge-*.list       # 3 份，与 mihomo 一一对应
+├── 🔷 mihomo-*.yaml      # 2 份：完整版 / 白名单守卫
+├── 🔶 surge-*.list       # 2 份，与 mihomo 一一对应
 ├── ✍️ custom-*.list      # 2 份人工维护源（--extra / --extra-white）
 └── 🧪 skill/             # 转换脚本 + 方法论
 ```
@@ -205,8 +197,8 @@ jinx-ads-rules/
 
 ## 📖 更多文档
 
-- 📘 [`skill/SKILL.md`](skill/SKILL.md) —— 匹配语义判定 · 通配映射 · 差集逻辑 · 白名单瘦身 · 生成命令
-- 🧪 [`skill/scripts/convert_ruleset.py`](skill/scripts/convert_ruleset.py) —— 6 个规则文件的生成脚本
+- 📘 [`skill/SKILL.md`](skill/SKILL.md) —— 匹配语义判定 · 通配映射 · 白名单瘦身 · 生成命令
+- 🧪 [`skill/scripts/convert_ruleset.py`](skill/scripts/convert_ruleset.py) —— 4 个规则文件的生成脚本
 - 🗓️ [`CHANGELOG.md`](CHANGELOG.md) —— 规则集变动记录
 
 ---

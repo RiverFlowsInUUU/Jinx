@@ -2,23 +2,30 @@
 #
 # 用途：上游 Jinx 规则集没收录、但实测确有广告行为的域名，人工补在这里。
 # 合并方式：由 skill/scripts/convert_ruleset.py 的 --extra 参数读入，
-#           并入条目池末尾后再参与 delta 过滤，与上游条目同等对待。
+#           并入条目池末尾，与上游条目同等对待。
 #
 # ⚠️ 只改本文件即可。不要手改 mihomo-*.yaml / surge-*.list ——
 #    那几个文件是生成产物，重跑一次转换就会被完全覆盖。
 #
 # 语法：一行一个域名，语义 = DOMAIN-SUFFIX（该域名 + 全部子域）。
 #
-# 现有条目与依据（2026-09-19 实测，来源：OpenClash 日志 + 第三方权威名单比对）
+# ⚠️ 收录前提：不得与上游 Jinx 白名单冲突。
+#    白名单守卫的对照面是上游黑名单（不含本文件），所以本文件的条目不会
+#    因为「上游已放行」而被豁免 —— 跟上游白名单对着干 = 静默误杀。
 #
-# msg.qy.net        爱奇艺视频广告素材 CNAME 出口（→ msg.video.dns.iqiyi.com）。
-#                   相机类 App「小鲸看看」冷启动时拉起，与被拦的 t7z.cupid.iqiyi.com 仅隔 75 ms。
-#                   收录于 anti-AD 与 1Hosts Lite。
+# 现有条目与依据（2026-09-22 复核）
+#
 # rmonitor.qq.com   腾讯广告监控上报端点。收录于 anti-AD 与 1Hosts Lite。
-# rdelivery.qq.com  腾讯广告配置拉取服务（实测响应头 trpc.rdelivery.config_pull_server）。
-#                   收录于 1Hosts Lite。
-#                   注：217heidai 曾为修复「QQ浏览器-免费小说」将此域加白，若发现该 App 异常可优先回退本条。
+#                   既不在上游黑名单、也不在其白名单 —— 干净的追加。
 #
-msg.qy.net
+# 2026-09-22 移除 2 条（留痕：曾收录 → 为什么错 → 已回退）
+#   msg.qy.net        2026-09-19 以「爱奇艺视频广告素材 CNAME 出口」收录；
+#                     复核发现它在上游 whitelist.txt 里，上游明确放行。
+#   rdelivery.qq.com  同日以「腾讯广告配置拉取服务」收录（实测响应头
+#                     trpc.rdelivery.config_pull_server）；同样在上游白名单里。
+#   两条的第三方依据都成立（1Hosts Lite 均收录；anti-AD 收 msg.qy.net、
+#   不收 rdelivery.qq.com，与当时的声称一致）。但上游判断优先 ——
+#   加进来只会让守卫失效、变成静默误杀。要拦它们得先改上游白名单的判定，
+#   而不是在这里单方面覆盖。
+
 rmonitor.qq.com
-rdelivery.qq.com

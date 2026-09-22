@@ -1,6 +1,6 @@
 ---
 name: adblock-ruleset-port
-description: 把第三方广告/域名规则源（Jinx、AdGuard、anti-AD、GOODBYEADS 等）转换并移植到 mihomo(OpenClash) / Surge / QuantumultX，含通配语义映射、覆盖度差集、白名单瘦身(guard list)、引用配置写法与规则顺序陷阱、规则仓库托管与 README 交付规范。触发词：规则集移植、黑名单转 clash、广告规则转 surge、jinx 规则、DOMAIN-WILDCARD、rule-provider behavior、去广告规则引用、AWAvenue、白名单瘦身、规则仓库 readme。
+description: 把第三方广告/域名规则源（Jinx、AdGuard、anti-AD、GOODBYEADS 等）转换并移植到 mihomo(OpenClash) / Surge / QuantumultX，含通配语义映射、覆盖度实测、白名单瘦身(guard list)、引用配置写法与规则顺序陷阱、规则仓库托管与 README 交付规范。触发词：规则集移植、黑名单转 clash、广告规则转 surge、jinx 规则、DOMAIN-WILDCARD、rule-provider behavior、去广告规则引用、AWAvenue、白名单瘦身、规则仓库 readme。
 agent_created: true
 ---
 
@@ -14,7 +14,7 @@ agent_created: true
 
 ## 铁律
 
-1. **先量化再动手**：不要假设"规则没生效"，先做**覆盖度差集**（源列表 vs 现用列表）。实测中 AWAvenue-Ads 只覆盖 Jinx 黑名单的 22.5%——问题是"域名不全"，不是"规则没生效"。这两者的修法完全不同。
+1. **先量化再动手**：不要假设"规则没生效"，先做**覆盖度实测**（把源列表与现用列表对账，量出漏拦面）。实测中 AWAvenue-Ads 只覆盖 Jinx 黑名单的 22.5%——问题是"域名不全"，不是"规则没生效"。这两者的修法完全不同。
 2. **先测匹配语义，再动手转换**（最易错、代价最大，见下节）。黑名单一般按"域名 + 全部子域"拦截，白名单一般只做精确放行。**默认假设"普通条目 = 精确匹配"会导致大面积漏拦。**
 3. **通配语义不可想当然**：三个平台的 `*` 含义不同，直接复制文件必然出错（见下表）。
 4. **规则顺序是生死线**：REJECT 规则集必须排在 `DIRECT` / `GEOSITE,cn,DIRECT` **之前**，否则永远轮不到。
@@ -73,24 +73,25 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 
 **`--naming repo`（托管场景务必加）**：输出改为 `mihomo-<tag>.yaml` / `surge-<tag>.list`，即**与仓库现有文件名一致**，可直接覆盖上传、客户端 URL 一个字都不用改。不加则用上表的社区通用命名。
 
-> 命名对照（`--tag` 用 `ads` / `ads-delta` / `white-guard` 时）：`--naming repo` 产出的正是 `mihomo-ads.yaml`、`surge-ads-delta.list`、`mihomo-white-guard.yaml` 这类托管常用名。
+> 命名对照（`--tag` 用 `ads` / `white-guard` 时）：`--naming repo` 产出的正是 `mihomo-ads.yaml`、`surge-white-guard.list` 这类托管常用名。
 
 > 不再输出 `behavior: domain` / Surge `DOMAIN-SET` 变体：这两者既装不下中缀通配，普通条目的子域语义又依赖实现细节。3.9k 条量级下 RULE-SET 的性能损失可忽略。
 
-**再算差集**（用户已有其他广告列表时做，避免重复加载）。
+### 曾提供「差集版」—— 已移除（2026-09-22，留痕）
 
-⚠️ **差集只能剔除被对方「深度覆盖」的条目**——即对方必须有 `DOMAIN-SUFFIX` / `DOMAIN-KEYWORD` / 通配规则。**对方只有一条 `DOMAIN,` 精确规则不足以作为删除理由**，否则会漏掉该域名的子域。
+**曾这样做**：`--delta-ref <现用规则集>` 剔除被对方**深度覆盖**的条目，产出 `*-ads-delta.*`，理由是"省掉重复加载"。
 
-实测教训（AWAvenue `Clash-Classical` 快照 965 条 = **949 `DOMAIN,` 精确 + 12 `DOMAIN-SUFFIX` + 4 `DOMAIN-KEYWORD`**）：
+**为什么错**（三条实测，全部反直觉）：
 
-- 965 条里 **864 条字面也出现在 Jinx 列表里**，但其中 852 条是 `DOMAIN,` 精确 —— 挡不住子域，**全部不作数**。
-- ⇒ **只有那 16 条（12 SUFFIX + 4 KEYWORD）能当"伞"**，一条罩住多条。最终只剔 **53 条**（33 条靠 SUFFIX、20 条靠 KEYWORD）。
-- ⚠️ 按 v1 的错判据（"精确命中即已覆盖"）会剔掉 **878 条**，差集版只剩 3013 条 —— 这是**实打实的漏拦**。
-- ⚠️ **这个数会随 AWAvenue 快照漂移**（v1 那次实测是 874，今天重算是 878）。别当固定值引用，要引用就写清"对哪天的快照"。
+1. **收益只有"列表少 53 行"**（3891 → 3838，约 1.4% 体积）。规则重复本身**没有副作用** —— 同一域名被两套规则命中，结果都是 REJECT。
+2. **代价是把那 53 条的覆盖面外包给对方的 16 条"伞"规则**（AWAvenue 快照里仅 12 `DOMAIN-SUFFIX` + 4 `DOMAIN-KEYWORD` 算深度覆盖）。对方一改，这边**静默漏拦**。
+3. **对误杀零改善** —— 完整版与差集版对上游白名单的命中数**同为 42 条**（那 53 条被剔的条目，一条都没参与过白名单碰撞）。
 
-差集省下的量远小于风险，**不确定客户端是否真的加载了参照列表时，直接给完整版。**
+⇒ **已回退：`--delta-ref` 参数与 `parse_reference()` 已从脚本删除，不再产出差集版。** 要与第三方列表叠加就直接叠，不做差集。
 
-## 完整生成（三条命令产出全部 6 个文件）
+⚠️ **降级保留的判据**（仍适用于**诊断**场景，不适用于产出）：判断"对方能不能算覆盖"时，只认**深度语义** —— 对方必须能用 `DOMAIN-SUFFIX` / `DOMAIN-KEYWORD` / 通配罩住该域**及其子域**。AWAvenue 那 949 条 `DOMAIN,` 精确匹配**挡不住子域，一条都不作数**。按"精确命中即已覆盖"的错判据会剔掉 **878 条**（旧版实测；该数随快照漂移，更早一次是 874）。**"字面重叠条数"永远不能当覆盖证据** —— 965 条里 864 条字面重叠，其中 852 条是精确匹配。
+
+## 完整生成（两条命令产出全部 4 个文件）
 
 `jinx-ads-rules` 的实际重跑流程。先取上游源文件：
 
@@ -102,7 +103,7 @@ done
 cd ..
 ```
 
-再跑三条（⚠️ `--src` 的写法会**原样进产物表头**，要与既有文件保持一致）：
+再跑两条（⚠️ `--src` 的写法会**原样进产物表头**，要与既有文件保持一致）：
 
 ```bash
 SK=skill/scripts/convert_ruleset.py
@@ -111,39 +112,37 @@ SK=skill/scripts/convert_ruleset.py
 python $SK --src jinx-rules --out ./out --fixed blacklist.txt --wild blacklist_wildcard.txt \
     --tag ads --mode suffix --naming repo --extra ./custom-ads.list
 
-# ② 黑名单 差集版
-python $SK --src jinx-rules --out ./out --fixed blacklist.txt --wild blacklist_wildcard.txt \
-    --tag ads-delta --mode suffix --naming repo --extra ./custom-ads.list \
-    --delta-ref https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
-
-# ③ 白名单 精简守卫
+# ② 白名单 精简守卫
 python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist_wildcard.txt \
     --tag white-guard --mode exact --naming repo \
     --guard-against-fixed blacklist.txt --guard-against-wild blacklist_wildcard.txt \
     --extra-white ./custom-direct.list
 ```
 
-预期读数：`ads 3891` / `ads-delta 3838`（-53）/ `white-guard 43`（上游白名单 325 条 → guard 裁到 42，再 +1 extra-white）。
+预期读数：`ads 3889` / `white-guard 43`（上游白名单 325 条 → guard 裁到 42，再 +1 extra-white）。
 
-**验收**：Surge 三个文件应与线上**逐字节一致**（md5 未变）；mihomo 三个 `.yaml` 的 `payload` 与既有文件**逐条等价**。
+**验收**：改动前后对 diff，**只允许三处变化** —— 表头 `# entries` 数字、`# extra:` 那一行、末尾按顺序多出/少掉 N 条；其余正文**逐行不变**。
 
 ## 自定义追加（`--extra`）—— 上游没有、但你要拦的域名
 
-**动机**：上游规则集总有收录缺口（实测：相机 App 冷启动时 `msg.qy.net` 放行，广告素材照常渲染）。补规则时如果直接手改 `mihomo-*.yaml`，**下次从上游重跑就被完全覆盖**，而且不会有任何提示。
+**动机**：上游规则集总有收录缺口（实测：腾讯广告监控上报端点 `rmonitor.qq.com` 既不在上游黑名单、也不在其白名单）。补规则时如果直接手改 `mihomo-*.yaml`，**下次从上游重跑就被完全覆盖**，而且不会有任何提示。
+
+⚠️ **收录前提：不得与上游白名单冲突。** 白名单守卫的对照面是上游黑名单（**不含 `custom-*.list`**），所以追加进来的域名不会因为"上游已放行"而被守卫豁免 —— 跟上游白名单对着干 = **静默误杀**。
+实例：2026-09-19 曾把 `msg.qy.net`、`rdelivery.qq.com` 加进来（两者的第三方依据都成立，1Hosts Lite 均收录），2026-09-22 复核发现**两者都在上游 `whitelist.txt` 里** —— 已移除。
 
 做法：把追加域名单独放一个文件（托管仓库里叫 `custom-ads.list`），生成时用 `--extra` 并进去：
 
 ```bash
 python convert_ruleset.py --src <源目录> --out <输出目录> \
     --fixed blacklist.txt --wild blacklist_wildcard.txt --tag ads --mode suffix --naming repo \
-    --extra ./custom-ads.list          # ← 差集版那条命令也要带
+    --extra ./custom-ads.list
 ```
 
 语义与位置约定：
 
 | 项 | 行为 |
 |---|---|
-| 合并时机 | **条目池构建之后、guard / `--delta-ref` 过滤之前** → 追加项与上游条目同等对待 |
+| 合并时机 | **条目池构建之后、guard 过滤之前** → 追加项与上游条目同等对待 |
 | 落点 | 输出**末尾**（`entries + added` 的 dedup 顺序），便于 diff 核验 |
 | 表头 | 多一行 `# extra: custom-ads.list(N)`，N = 该文件读入条数 |
 | 路径解析 | 先按 cwd 找；找不到再按 `--src` 目录找（`--extra custom-ads.list` 与 `--extra ./custom-ads.list` 都可用） |
@@ -258,7 +257,7 @@ python upload_to_github.py --token <PAT> --repo jinx-ads-rules --files a.list b.
 ```bash
 python upload_repo.py --token <PAT> --repo <owner>/<name> --message "..." \
     --map custom-ads.list:custom-ads.list \
-          _regen/mihomo-ads-delta.yaml:mihomo-ads-delta.yaml \
+          _regen/mihomo-ads.yaml:mihomo-ads.yaml \
           README.md:README.md \
           /abs/path/convert_ruleset.py:skill/scripts/convert_ruleset.py
 ```
