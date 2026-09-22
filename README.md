@@ -18,25 +18,47 @@
 
 🔷 **mihomo / OpenClash**
 
+完整版 · 3891 条
+
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads.yaml
 ```
 
+差集版 · 3838 条 · 搭配 AWAvenue
+
+```
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads-delta.yaml
+```
+
+白名单守卫 · 43 条 · 与上面任一配套
+
+```
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-guard.yaml
+```
+
 🔶 **Surge**
+
+完整版 · 3891 条
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads.list
 ```
 
-| 变体 | mihomo | Surge | 条数 | 用于 |
-|:-----|:-------|:------|-----:|:-----|
-| 完整版 | `mihomo-ads.yaml` | `surge-ads.list` | 3891 | 默认 |
-| 差集版 | `mihomo-ads-delta.yaml` | `surge-ads-delta.list` | 3838 | 已加载 `AWAvenue-Ads-Rule` |
-| 白名单守卫 | `mihomo-white-guard.yaml` | `surge-white-guard.list` | 43 | 与上面任一配套 |
+差集版 · 3838 条 · 搭配 AWAvenue
+
+```
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads-delta.list
+```
+
+白名单守卫 · 43 条 · 与上面任一配套
+
+```
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-white-guard.list
+```
 
 差集版 = 完整版剔除与 AWAvenue 重叠的 53 条。守卫 = 上游 325 条白名单中会被黑名单命中的 42 条，加 1 条手工补充。
 
-地址前缀二选一，拼上文件名即完整地址：`cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/`（推荐）或 `raw.githubusercontent.com/RiverFlowsInUUU/jinx-ads-rules/main/`。急用加 `?v=<日期>` 绕开 CDN 缓存。
+以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/jinx-ads-rules/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
 
 ---
 
@@ -168,6 +190,26 @@ jinx-ads-rules/
 - 📘 [`skill/SKILL.md`](skill/SKILL.md) —— 匹配语义判定 · 通配映射 · 差集逻辑 · 白名单瘦身 · 生成命令
 - 🧪 [`skill/scripts/convert_ruleset.py`](skill/scripts/convert_ruleset.py) —— 6 个规则文件的生成脚本
 - 🗓️ [`CHANGELOG.md`](CHANGELOG.md) —— 规则集变动记录
+
+---
+
+## 🤝 搭配：AWAvenue-Ads-Rule
+
+差集版剔除了与 AWAvenue 重叠的条目，需与它并用。本体地址：
+
+🔷 **mihomo / OpenClash** · `Clash-Classical`
+
+```
+https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
+```
+
+🔶 **Surge** · `RULE-SET`
+
+```
+https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+```
+
+由 [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) 维护（GPL-3.0）· 更多格式见[官方订阅生成器](https://awavenue.top/Sub.html)。
 
 ---
 
