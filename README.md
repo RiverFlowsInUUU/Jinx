@@ -94,34 +94,18 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 
 ⚠️ 判定标准与 Jinx 不同：叠加后上游 Jinx 白名单中有 8 个域会被它拦掉（实测，随它每日更新的快照浮动）。
 
-本体地址（同样 ⭐ Raw 首选 / 🔁 jsDelivr 备用）：
+本体地址（第三方规则，由对方托管 —— 此处只给 Raw 源）：
 
 🔷 **mihomo / OpenClash** · `Clash-Classical`
-
-⭐ 首选 · Raw GitHub
 
 ```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
 ```
 
-🔁 备用 · jsDelivr CDN
-
-```
-https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
-```
-
 🔶 **Surge** · `RULE-SET`
-
-⭐ 首选 · Raw GitHub
 
 ```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
-```
-
-🔁 备用 · jsDelivr CDN
-
-```
-https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
 ```
 
 ⚠️ `Filters/` 下另有一份 `AWAvenue-Ads-Rule-Surge.list` —— 那是**裸域名**格式（`.8le8le.com` 这类带前导点，DOMAIN-SET 语义），与 `RULE-SET` 的消费方式不匹配。两份条数也不同：裸域名版 961 条，本地址 965 条 —— 差额正好是它写不出的 4 条 `DOMAIN-KEYWORD`（`-ad.sm.cn`、`-ad.video.yximgs.com`、`-ad.wtzw.com`、`-be-pack-sign.pglstatp-toutiao.com`，子串匹配，无裸域名等价形式）。
