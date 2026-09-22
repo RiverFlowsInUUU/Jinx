@@ -49,7 +49,7 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 
 🤝 **AWAvenue 秋风广告规则** · 第三方 · 可叠加 · 仅给 Raw 源
 
-⚠️ 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。由对方托管，缓存不归我们管，故不列备用源。
+⚠️ 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。
 
 ```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
