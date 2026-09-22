@@ -64,7 +64,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
     --fixed blacklist.txt --wild blacklist_wildcard.txt --tag ads --mode suffix
 ```
 
-产出 2 个文件（完整版）：
+产出 2 个文件（黑名单）：
 
 | 文件 | 用途 |
 |---|---|
@@ -85,7 +85,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 
 1. **收益只有"列表少 53 行"**（3891 → 3838，约 1.4% 体积）。规则重复本身**没有副作用** —— 同一域名被两套规则命中，结果都是 REJECT。
 2. **代价是把那 53 条的覆盖面外包给对方的 16 条"伞"规则**（AWAvenue 快照里仅 12 `DOMAIN-SUFFIX` + 4 `DOMAIN-KEYWORD` 算深度覆盖）。对方一改，这边**静默漏拦**。
-3. **对误杀零改善** —— 完整版与差集版对上游白名单的命中数**同为 42 条**（那 53 条被剔的条目，一条都没参与过白名单碰撞）。
+3. **对误杀零改善** —— 黑名单与差集版对上游白名单的命中数**同为 42 条**（那 53 条被剔的条目，一条都没参与过白名单碰撞）。
 
 ⇒ **已回退：`--delta-ref` 参数与 `parse_reference()` 已从脚本删除，不再产出差集版。** 要与第三方列表叠加就直接叠，不做差集。
 
@@ -108,11 +108,11 @@ cd ..
 ```bash
 SK=skill/scripts/convert_ruleset.py
 
-# ① 黑名单 完整版
+# ① 黑名单
 python $SK --src jinx-rules --out ./out --fixed blacklist.txt --wild blacklist_wildcard.txt \
     --tag ads --mode suffix --naming repo --extra ./custom-ads.list
 
-# ② 白名单 精简守卫
+# ② 白名单
 python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist_wildcard.txt \
     --tag white-guard --mode exact --naming repo \
     --guard-against-fixed blacklist.txt --guard-against-wild blacklist_wildcard.txt \
@@ -127,7 +127,7 @@ python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist
 
 **动机**：上游规则集总有收录缺口（实测：腾讯广告监控上报端点 `rmonitor.qq.com` 既不在上游黑名单、也不在其白名单）。补规则时如果直接手改 `mihomo-*.yaml`，**下次从上游重跑就被完全覆盖**，而且不会有任何提示。
 
-⚠️ **收录前提：不得与上游白名单冲突。** 白名单守卫的对照面是上游黑名单（**不含 `custom-*.list`**），所以追加进来的域名不会因为"上游已放行"而被守卫豁免 —— 跟上游白名单对着干 = **静默误杀**。
+⚠️ **收录前提：不得与上游白名单冲突。** 白名单的对照面是上游黑名单（**不含 `custom-*.list`**），所以追加进来的域名不会因为"上游已放行"而被白名单豁免 —— 跟上游白名单对着干 = **静默误杀**。
 实例：2026-09-19 曾把 `msg.qy.net`、`rdelivery.qq.com` 加进来（两者的第三方依据都成立，1Hosts Lite 均收录），2026-09-22 复核发现**两者都在上游 `whitelist.txt` 里** —— 已移除。
 
 做法：把追加域名单独放一个文件（托管仓库里叫 `custom-ads.list`），生成时用 `--extra` 并进去：

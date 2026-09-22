@@ -18,13 +18,13 @@
 
 🔷 **mihomo / OpenClash**
 
-完整版 · 3889 条
+黑名单 · 3889 条
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-ads.yaml
 ```
 
-白名单守卫 · 43 条 · 与完整版配套
+白名单 · 43 条 · 与黑名单配套
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-guard.yaml
@@ -32,19 +32,19 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/mihomo-white-gua
 
 🔶 **Surge**
 
-完整版 · 3889 条
+黑名单 · 3889 条
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-ads.list
 ```
 
-白名单守卫 · 43 条 · 与完整版配套
+白名单 · 43 条 · 与黑名单配套
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-white-guard.list
 ```
 
-守卫 = 上游 325 条白名单中会被黑名单命中的 42 条，加 1 条手工补充。
+白名单 = 上游白名单（325 条）中会被黑名单命中的 42 条，加 1 条手工补充。
 
 以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/jinx-ads-rules/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
 
@@ -128,7 +128,7 @@ RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-a
 
 | # | 规则 | 去向 |
 |:-:|:-----|:-----|
-| 🛡️ | 白名单守卫 | `DIRECT` |
+| 🛡️ | 白名单 | `DIRECT` |
 | 🚫 | 广告拦截 | `REJECT` |
 | 🇨🇳 | 常规分流（`GEOSITE,cn` / `GEOIP,cn`） | `DIRECT` |
 
@@ -145,10 +145,10 @@ RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/jinx-ads-rules@main/surge-a
 | `bugly.qq.com` | 该域 + 全部子域 | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` |
 | `*.cupid.iqiyi.com` | 同上（等价） | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` |
 | `p*-ad.adkwai.com` | 中缀通配（单级） | `DOMAIN-REGEX` | `DOMAIN-WILDCARD` |
-| 白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` |
+| 上游白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` |
 
 - 两平台唯一差异是 149 条中缀通配 —— mihomo 不支持星号内嵌，改用 `DOMAIN-REGEX`
-- `DOMAIN-SUFFIX` 覆盖整个子域树；误杀用白名单守卫放行
+- `DOMAIN-SUFFIX` 覆盖整个子域树；误杀用白名单放行
 - 仅域名级拦截，同域内嵌广告需 MITM / URL 级规则
 - 上游 `url_*` / `mitm_skip_domains` 依赖 MITM 上下文，未转换
 
@@ -172,7 +172,7 @@ uci commit openclash
 
 ```
 jinx-ads-rules/
-├── 🔷 mihomo-*.yaml      # 2 份：完整版 / 白名单守卫
+├── 🔷 mihomo-*.yaml      # 2 份：黑名单 / 白名单
 ├── 🔶 surge-*.list       # 2 份，与 mihomo 一一对应
 ├── ✍️ custom-*.list      # 2 份人工维护源（--extra / --extra-white）
 └── 🧪 skill/             # 转换脚本 + 方法论
