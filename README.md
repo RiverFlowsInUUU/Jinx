@@ -16,15 +16,37 @@
 
 ## 📥 规则集
 
+⭐ **首选 Raw GitHub** —— 直读 `main` 分支，无 jsDelivr 那层 CDN 缓存，更新同步最快
+
+🔁 **备用 jsDelivr CDN** —— 国内直连更稳，代价是缓存更厚，更新后需数分钟才同步
+
+两源内容完全一致，任选其一。
+
 🔷 **mihomo / OpenClash**
 
 黑名单 · 3889 条
+
+⭐ 首选 · Raw GitHub
+
+```
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
+```
+
+🔁 备用 · jsDelivr CDN
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
 ```
 
 白名单 · 43 条 · 与黑名单配套
+
+⭐ 首选 · Raw GitHub
+
+```
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml
+```
+
+🔁 备用 · jsDelivr CDN
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
@@ -34,11 +56,27 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
 
 黑名单 · 3889 条
 
+⭐ 首选 · Raw GitHub
+
+```
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+```
+
+🔁 备用 · jsDelivr CDN
+
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
 ```
 
 白名单 · 43 条 · 与黑名单配套
+
+⭐ 首选 · Raw GitHub
+
+```
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+```
+
+🔁 备用 · jsDelivr CDN
 
 ```
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
@@ -46,7 +84,7 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 
 白名单 = 上游白名单（325 条）中会被黑名单命中的 42 条，加 1 条手工补充。
 
-以上均为 jsDelivr；备选源 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/<文件名>`。急用加 `?v=<日期>` 绕开 CDN 缓存。
+四份文件路径一一对应，切源只换前缀：`raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` ⇄ `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。jsDelivr 缓存急用时在末尾加 `?v=<日期>` 绕过。
 
 ### 🤝 搭配：AWAvenue-Ads-Rule
 
@@ -54,15 +92,31 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
 
 ⚠️ 判定标准与 Jinx 不同：叠加后上游 Jinx 白名单中有 8 个域会被它拦掉（实测，随它每日更新的快照浮动）。
 
-本体地址：
+本体地址（同样 ⭐ Raw 首选 / 🔁 jsDelivr 备用）：
 
 🔷 **mihomo / OpenClash** · `Clash-Classical`
+
+⭐ 首选 · Raw GitHub
+
+```
+https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
+```
+
+🔁 备用 · jsDelivr CDN
 
 ```
 https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
 ```
 
 🔶 **Surge** · `RULE-SET`
+
+⭐ 首选 · Raw GitHub
+
+```
+https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+```
+
+🔁 备用 · jsDelivr CDN
 
 ```
 https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
@@ -82,7 +136,7 @@ rule-providers:
     type: http
     behavior: classical          # 不用 domain
     format: yaml                 # 文件是顶层 payload 列表
-    url: "https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml"
+    url: "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml"
     path: ./rule_provider/jinx-ads.yaml
     interval: 86400
 
@@ -90,7 +144,7 @@ rule-providers:
     type: http
     behavior: classical
     format: yaml
-    url: "https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml"
+    url: "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml"
     path: ./rule_provider/jinx-white-guard.yaml
     interval: 86400
 
@@ -99,6 +153,8 @@ rules:
   - RULE-SET,jinx-ads,REJECT
   # 其余规则接在后面
 ```
+
+上面两处 `url` 用的是 ⭐ 首选 Raw；换 🔁 备用源只需把 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
 
 适用 mihomo · OpenClash · Stash · FlClash。`behavior: domain` 对普通域名的匹配范围取决于实现；`classical` 加显式 `DOMAIN-SUFFIX` 语义明确。
 
@@ -109,11 +165,13 @@ rules:
 ```
 [Rule]
 # 白名单（精确放行）
-RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list,DIRECT
+RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list,DIRECT
 # 广告拦截
-RULE-SET,https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list,REJECT,pre-matching,extended-matching
+RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list,REJECT,pre-matching,extended-matching
 # 其余规则接在后面
 ```
+
+上面用的是 ⭐ 首选 Raw；换 🔁 备用源把两条里的 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 改成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
 
 | 参数 | 作用 |
 |:-----|:-----|

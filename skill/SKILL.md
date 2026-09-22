@@ -230,7 +230,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 1. **来源与致谢 + 许可状态**：写清上游仓库链接、对应版本、上游是否声明 License（无声明就明确写"无，本仓库不主张许可"）。**绝不把转换产物的版权据为己有**，并给出下架渠道（"作者提 issue 即删"）。
 2. **选文件决策表**：按"你已有的规则集 / 客户端 / 保真 vs 性能"三档给结论，别让用户自己猜文件名。
 3. **可直接复制的配置片段**：每个客户端一段，含**规则顺序警告**和参数说明。
-4. **双地址**：每个文件同时给 jsDelivr 与 GitHub raw 两种 URL（见下"托管到公网"节）。
+4. **双地址**：每个文件同时给 GitHub raw 与 jsDelivr 两种 URL，**Raw 在前**（见下"托管到公网"节）。
 5. **已知坑**：超广通配误杀、高性能格式丢中缀通配、CDN 缓存、顺序、参数限制。
 6. **重新生成方式（含脚本本体）**：只给命令**不算可复现**——脚本必须**随仓库一起上传**（放 `skill/` 或 `tools/` 目录），README 里写全"clone 下来就能跑"的流程（取源文件 → 跑脚本 → 覆盖上传），并标注源文件在上游的准确路径。实测教训：README 里只写 `python convert_ruleset.py ...` 而仓库无此脚本，使用者第一行就报 `can't open file 'convert_ruleset.py'`。
 7. **告知可复现性是"已实测"的**：重跑一遍并与仓库现存文件做 `diff`，把结果写进 README（"逐字节一致"）。这既是给使用者的信心，也是自己下次改动时的回归基线。
@@ -272,8 +272,9 @@ python upload_repo.py --token <PAT> --repo <owner>/<name> --message "..." \
 
 - **Token 最小权限**：classic 只勾 `public_repo` 即可（能建公开仓库+传文件，动不了私有代码）；fine-grained 需 Contents(read/write) + Administration(read/write)。
 - **仓库必须 public**：私有仓库的 raw 地址要认证，Surge 拉不到。
-- **引用优先 jsDelivr 镜像**：`https://cdn.jsdelivr.net/gh/<user>/<repo>@main/<file>`。`raw.githubusercontent.com` 国内常被墙；jsDelivr 有 CDN 缓存，但更新后有几分钟延迟。
-- **README 与配置片段里两种地址都要给**（不要只给 jsDelivr）：jsDelivr 国内可直连但受 CDN 缓存/单点故障影响，`raw` 无缓存延迟但需能直连 GitHub。做法是——配置片段里把 raw 那行注释掉放在 jsDelivr 下一行，文末"文件清单"再给一张 `jsDelivr | raw` 双列速查表（或声明两个前缀 + 文件名拼接）。README 里不要出现"只推荐一个、另一个自求多福"的写法。
+- **引用优先 Raw GitHub**：`https://raw.githubusercontent.com/<user>/<repo>/main/<file>`。直读 `main`，无 jsDelivr 那层 CDN 缓存，更新同步最快；代价是**国内常被墙**，用的人要能直连 GitHub。注意 raw 自身也有一层边缘缓存（见上「上传后如何确认生效」），实测更新后数分钟内可能仍返回旧内容，**别拿 raw 当"已生效"的判据**。
+- **备用 jsDelivr 镜像**：`https://cdn.jsdelivr.net/gh/<user>/<repo>@main/<file>`。国内直连更稳，但缓存更厚，更新后要几分钟才同步；急用加 `?v=<日期>` 绕过（见下 purge）。
+- **README 与配置片段里两种地址都要给，且 Raw 在前**（不要只给 jsDelivr）：每个规则文件各给一块 fenced 代码块（GitHub 自带复制按钮）—— ⭐ 首选 Raw、🔁 备用 jsDelivr；配置片段里写 Raw，备用源的换法写在片段下方的说明行里。README 里不要出现"只推荐一个、另一个自求多福"的写法，也不要把备用源塞进小字备注（给了等于没给）。
 - **删除文件后必须 purge jsDelivr 缓存**：CDN 会继续提供已删文件（`raw` 已 404，但 `cdn.jsdelivr.net` 仍返回 200，两者不一致）。逐文件请求 `https://purge.jsdelivr.net/gh/<user>/<repo>@main/<file>`，返回 `"status": "finished"` 即生效，之后即 404。
 - **删旧文件前先确认引用方已迁移**：规则集 URL 404 会导致客户端拉取失败。若无法确认，宁可保留旧文件并在 README 标注废弃（本次用户明确要求删除才删）。删除时保持**仓库名、文件名、CDN 域名不变**，只移除旧文件。
 - 完成后提醒用户撤销 token（`github.com/settings/tokens`）。
