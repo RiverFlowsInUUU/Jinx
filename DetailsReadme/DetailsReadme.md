@@ -9,7 +9,7 @@
 - [🤝 3 · 搭配 AWAvenue-Ads-Rule](#-3-搭配-awavenue-ads-rule)
 - [📋 4 · 规则顺序](#-4-规则顺序)
 - [🔄 5 · 转换原理](#-5-转换原理)
-- [⚙️ 6 · OpenClash：绕过中国大陆 IP](#-6-openclash绕过中国大陆-ip)
+- [🚧 6 · OpenClash：绕过中国大陆 IP](#-6-openclash绕过中国大陆-ip)
 - [📁 7 · 文件结构](#-7-文件结构)
 - [📚 8 · 来源与许可](#-8-来源与许可)
 
@@ -98,7 +98,7 @@
 
 ---
 
-## ⚙️ 6 OpenClash：绕过中国大陆 IP
+## 🚧 6 OpenClash：绕过中国大陆 IP
 
 `china_ip_route`（默认常开）把中国大陆域名集写入 `fake-ip-filter`：这些域名解析到真实 IP，防火墙判定目标属大陆后直接放行，**连接不进入内核** —— 规则不生效，日志里也没有记录。国内 App 的广告 / 埋点 SDK 多挂在大厂域名下（`*.volces.com`、`*.bytedns.com`），天然落进该域名集。
 

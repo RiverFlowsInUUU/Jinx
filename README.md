@@ -56,7 +56,7 @@ https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWA
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
 ```
 
-## 🛠️ 接入
+## 🔧 接入
 
 **mihomo / OpenClash**
 
@@ -111,7 +111,7 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 
 国内广告域名多数同时属于「中国大陆域名」—— `GEOSITE,cn` 若排到 `REJECT` 之前会先命中放行，广告规则再没有机会执行。
 
-## ⚙️ OpenClash
+## 🚧 OpenClash
 
 `绕过中国大陆 IP`（`china_ip_route`）默认常开。开着时目标属大陆的连接直接放行、**不进入内核**，规则不生效，日志里也没有记录。用本规则集要关掉它：
 
