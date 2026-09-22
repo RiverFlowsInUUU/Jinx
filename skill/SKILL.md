@@ -83,6 +83,43 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 
 实测教训：AWAvenue `Clash-Classical` 949 条里 **936 条是 `DOMAIN,` 精确**、仅 12 条 SUFFIX。v1 按"精确命中即已覆盖"删掉了 874 条；改成"深度覆盖才算"后只该删 **53 条**。差集省下的量远小于风险，**不确定客户端是否真的加载了参照列表时，直接给完整版。**
 
+## 完整生成（三条命令产出全部 6 个文件）
+
+`jinx-ads-rules` 的实际重跑流程。先取上游源文件：
+
+```bash
+mkdir -p jinx-rules && cd jinx-rules
+for f in blacklist.txt blacklist_wildcard.txt whitelist.txt whitelist_wildcard.txt version.json; do
+  curl -fsSLO "https://raw.githubusercontent.com/VME98/jinx-rules/master/rules/$f"
+done
+cd ..
+```
+
+再跑三条（⚠️ `--src` 的写法会**原样进产物表头**，要与既有文件保持一致）：
+
+```bash
+SK=skill/scripts/convert_ruleset.py
+
+# ① 黑名单 完整版
+python $SK --src jinx-rules --out ./out --fixed blacklist.txt --wild blacklist_wildcard.txt \
+    --tag ads --mode suffix --naming repo --extra ./custom-ads.list
+
+# ② 黑名单 差集版
+python $SK --src jinx-rules --out ./out --fixed blacklist.txt --wild blacklist_wildcard.txt \
+    --tag ads-delta --mode suffix --naming repo --extra ./custom-ads.list \
+    --delta-ref https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
+
+# ③ 白名单 精简守卫
+python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist_wildcard.txt \
+    --tag white-guard --mode exact --naming repo \
+    --guard-against-fixed blacklist.txt --guard-against-wild blacklist_wildcard.txt \
+    --extra-white ./custom-direct.list
+```
+
+预期读数：`ads 3891` / `ads-delta 3838`（-53）/ `white-guard 43`（上游白名单 325 条 → guard 裁到 42，再 +1 extra-white）。
+
+**验收**：Surge 三个文件应与线上**逐字节一致**（md5 未变）；mihomo 三个 `.yaml` 的 `payload` 与既有文件**逐条等价**。
+
 ## 自定义追加（`--extra`）—— 上游没有、但你要拦的域名
 
 **动机**：上游规则集总有收录缺口（实测：相机 App 冷启动时 `msg.qy.net` 放行，广告素材照常渲染）。补规则时如果直接手改 `mihomo-*.yaml`，**下次从上游重跑就被完全覆盖**，而且不会有任何提示。
