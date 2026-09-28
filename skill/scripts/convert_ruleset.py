@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把第三方域名规则源转换为 mihomo / Surge 可用格式。
+"""把第三方域名规则源转换为 mihomo / Surge / sing-box 可用格式。
 
 用法:
   python convert_ruleset.py --src ./jinx-rules --out ./converted \\
@@ -31,6 +31,7 @@
 产出:
   mihomo-<tag>-classical.yaml   behavior: classical, format: yaml, 100% 保真
   surge-<tag>-ruleset.list      Surge RULE-SET, 100% 保真
+  sing-box-<tag>(-classical).json  sing-box rule-set source 格式, 100% 保真
 
 后缀约定(2026-09-22 修正):
   mihomo 侧一律 .yaml, 内容是顶层 payload 列表。依据: 官方文档 rule-providers 的
@@ -40,6 +41,26 @@
   (默认按 yaml 解析 -> 报错或空规则), 要么被迫写一条多余的 format: text。
   Surge 侧维持 .list 不变。
 
+sing-box 侧约定(2026-09-28 新增, 依据官方文档 rule-set 页, 内核 1.14.2):
+  格式为 rule-set 的 source 格式(JSON), 不用二进制 .srs —— 远程规则集
+  format: "source" 即可直接消费 JSON, 无需本地编译。
+  * 顶层 {"version": 5, "rules": [...]}: version 5 是 1.14.0 引入的当前格式
+    版本(新增 package_name_regex 规则项); 只用 domain 族老字段, 1.14 内核
+    全部接受。
+  * 扩展名用 .json: 官方文档明确 format 字段 "Optional when path or url
+    uses json or srs as extension", .json 即 source 格式的约定扩展名。
+  * 域名语义(实证 sagernet/sing common/domain/matcher.go 的 trie 实现):
+    - domain_suffix: ["example.com"]  => example.com 自身 + 全部子域,
+      域段级边界(aexample.com 不命中) —— 与 mihomo DOMAIN-SUFFIX 等价;
+      前导点写法 ".example.com" 才是"仅子域、不含自身", 我们不用它。
+    - domain: ["example.com"]         => 仅精确, 不继承子域 —— 白名单用。
+    - domain_regex: ["^...$"]         => Go RE2 正则, 与 mihomo 的
+      DOMAIN-REGEX 同语法, 中缀通配的转换式可直接复用。
+  * 单条 rules 项内 domain_suffix / domain_regex 等域名族字段互为 OR,
+    不同 rules 项之间也是 OR —— 全部条目放同一项即可。
+  * source JSON 不支持注释, strict 解析不允许多余字段: 元数据(来源/条数)
+    不写进文件, 只打印到 stdout。
+
 语义要点(踩过的坑, 见 SKILL.md):
   * 黑名单类规则源(Jinx)通常按"域名+子域"拦截, 必须用 --mode suffix。
     用 DOMAIN 精确匹配会漏掉所有未显式列出的子域。
@@ -48,6 +69,7 @@
 """
 import argparse
 import collections
+import json
 import pathlib
 import re
 import urllib.request
@@ -101,6 +123,24 @@ def dedup(seq):
             seen.add(k)
             out.append(k)
     return out
+
+
+def singbox_json(sb_suffix, sb_domain, sb_regex):
+    """把 sing-box 条目包装成 rule-set source 格式(version 5)。
+
+    单条 rules 项内域名族字段互为 OR —— 三类条目并排放同一项,
+    任一命中即命中, 与 mihomo/Surge 逐条规则的语义一致。
+    空字段整体省略(空数组会被 strict 解析拒绝)。
+    """
+    rule = {}
+    if sb_domain:
+        rule['domain'] = sb_domain
+    if sb_suffix:
+        rule['domain_suffix'] = sb_suffix
+    if sb_regex:
+        rule['domain_regex'] = sb_regex
+    doc = {'version': 5, 'rules': [rule]}
+    return json.dumps(doc, ensure_ascii=False, indent=2) + '\n'
 
 
 def mihomo_yaml(header, rules):
@@ -239,6 +279,7 @@ def main():
 
     counter = collections.Counter()
     mihomo_classical, surge_ruleset = [], []
+    sb_suffix, sb_domain, sb_regex = [], [], []
     recovered = []
 
     for e in entries:
@@ -255,16 +296,20 @@ def main():
             if args.mode == 'suffix':
                 mihomo_classical.append('DOMAIN-SUFFIX,' + e)
                 surge_ruleset.append('DOMAIN-SUFFIX,' + e)
+                sb_suffix.append(e)
             else:
                 mihomo_classical.append('DOMAIN,' + e)
                 surge_ruleset.append('DOMAIN,' + e)
+                sb_domain.append(e)
         elif kind == 'suffix':
             base = e[2:]
             mihomo_classical.append('DOMAIN-SUFFIX,' + base)
             surge_ruleset.append('DOMAIN-SUFFIX,' + base)
+            sb_suffix.append(base)
         else:
             mihomo_classical.append('DOMAIN-REGEX,' + glob_to_regex(e))
             surge_ruleset.append('DOMAIN-WILDCARD,' + e)
+            sb_regex.append(glob_to_regex(e))
 
     # --extra-white 条目: 强制 DOMAIN-SUFFIX, 追加在末尾(与已有条目去重)
     if forced:
@@ -279,6 +324,7 @@ def main():
             seen.add(line.lower())
             mihomo_classical.append(line)
             surge_ruleset.append(line)
+            sb_suffix.append(base)
         if dup:
             print('  (--extra-white 中 %d 条与已有条目重复, 已跳过)' % dup)
 
@@ -290,12 +336,17 @@ def main():
     if extra_white_names:
         header += '# extra-white: %s\n' % ', '.join(extra_white_names)
     if args.naming == 'repo':
-        names = ('mihomo-%s.yaml' % args.tag, 'surge-%s.list' % args.tag)
+        names = ('mihomo-%s.yaml' % args.tag, 'surge-%s.list' % args.tag,
+                 'sing-box-%s.json' % args.tag)
     else:
-        names = ('mihomo-%s-classical.yaml' % args.tag, 'surge-%s-ruleset.list' % args.tag)
+        names = ('mihomo-%s-classical.yaml' % args.tag, 'surge-%s-ruleset.list' % args.tag,
+                 'sing-box-%s-classical.json' % args.tag)
+    sb_text = singbox_json(sb_suffix, sb_domain, sb_regex)
+    sb_total = len(sb_suffix) + len(sb_domain) + len(sb_regex)
     outputs = [
         (names[0], mihomo_yaml(header, mihomo_classical), len(mihomo_classical)),
         (names[1], header + '\n'.join(surge_ruleset) + '\n', len(surge_ruleset)),
+        (names[2], sb_text, sb_total),
     ]
     for name, text, n in outputs:
         (out / name).write_text(text, encoding='utf-8')
@@ -305,6 +356,8 @@ def main():
           % (counter['exact'], counter['suffix'], counter['glob'], counter['url'], len(recovered)))
     print('语义: --mode %s => 普通条目输出为 %s'
           % (args.mode, 'DOMAIN-SUFFIX' if args.mode == 'suffix' else 'DOMAIN'))
+    print('sing-box: domain=%d domain_suffix=%d domain_regex=%d (version 5, source 格式)'
+          % (len(sb_domain), len(sb_suffix), len(sb_regex)))
 
 
 if __name__ == '__main__':

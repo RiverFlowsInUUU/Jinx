@@ -23,6 +23,8 @@
 | mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 43 | 白名单 · 放行 |
 | Surge | `surge-ads.list` | `RULE-SET` | 3889 | 黑名单 · 拦截 |
 | Surge | `surge-white-guard.list` | `RULE-SET` | 43 | 白名单 · 放行 |
+| sing-box | `sing-box-ads.json` | `source` | 3889 | 黑名单 · 拦截 |
+| sing-box | `sing-box-white-guard.json` | `source` | 43 | 白名单 · 放行 |
 
 🧩 **白名单怎么来的**：上游白名单（325 条）中会被黑名单命中的 **42 条**，加 **1 条**手工补充（`*.tange365.com`，「小鲸看看」相机 App 的账户 / 设备 / 云存储域），共 43 条。
 
@@ -84,17 +86,23 @@
 
 ## 🔄 5 转换原理
 
-| 上游写法 | 含义 | mihomo | Surge |
-|:---------|:-----|:-------|:------|
-| `bugly.qq.com` | 该域 + 全部子域 | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` |
-| `*.cupid.iqiyi.com` | 同上（等价） | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` |
-| `p*-ad.adkwai.com` | 中缀通配（单级） | `DOMAIN-REGEX` | `DOMAIN-WILDCARD` |
-| 上游白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` |
+| 上游写法 | 含义 | mihomo | Surge | sing-box |
+|:---------|:-----|:-------|:------|:---------|
+| `bugly.qq.com` | 该域 + 全部子域 | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` | `domain_suffix` |
+| `*.cupid.iqiyi.com` | 同上（等价） | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` | `domain_suffix` |
+| `p*-ad.adkwai.com` | 中缀通配（单级） | `DOMAIN-REGEX` | `DOMAIN-WILDCARD` | `domain_regex` |
+| 上游白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` | `domain` |
 
-- 🎯 两平台唯一差异是 **149 条中缀通配** —— mihomo 不支持星号内嵌，改用 `DOMAIN-REGEX`。
-- 🌳 `DOMAIN-SUFFIX` 覆盖整个子域树；误杀用白名单放行。
+- 🎯 mihomo / Surge 唯一差异是 **149 条中缀通配** —— mihomo 不支持星号内嵌，改用 `DOMAIN-REGEX`。sing-box 一并落在 `domain_regex`（同为 Go RE2 正则，转换式三平台可复用）。
+- 🌳 `DOMAIN-SUFFIX` / `domain_suffix` 覆盖整个子域树；误杀用白名单放行。
 - 🧱 仅域名级拦截，同域内嵌广告需 MITM / URL 级规则。
 - ⏭️ 上游 `url_*` / `mitm_skip_domains` 依赖 MITM 上下文，未转换。
+
+🔬 **sing-box 侧的语义实证**（内核 1.14.2 · 2026-09-28）：
+
+- 📐 `domain_suffix: ["example.com"]`（不带点）命中自身 + 全部子域，**域段级边界**（`aexample.com` 不误命中）—— 实证 `sagernet/sing` 的 `common/domain/matcher.go`：trie 按「`.` 段边界 + 叶子」判定，与 mihomo `DOMAIN-SUFFIX` 等价；前导点写法 `.example.com` 才是「仅子域、不含自身」，本仓不用。
+- 🧊 文件是 rule-set 的 **source 格式**（JSON，`"version": 5`），不是二进制 `.srs` —— 远程规则集 `format: "source"` 直接消费，订阅即用无需本地编译；官方文档明确 `.json` 扩展名下 `format` 可省略，本仓配置示例仍显式写出。
+- 🔍 `sing-box rule-set compile` 可把 JSON 编译成 `.srs`（本仓不用，仅作格式校验）；编译时 trie 会把 **17 条重复条目折叠**（上游同时存在 `*.x.com` 与 `x.com`，转换后同值），与 mihomo / Surge 侧保留重复行同源 —— 重复匹配无副作用，三平台条目口径保持一致。compile → decompile 回读：`domain_suffix` 3740 → 3723（去重后唯一值）、`domain_regex` 149 / `domain` 41 逐条一致。
 
 ---
 
@@ -120,12 +128,13 @@ uci commit openclash
 Jinx/
 ├── 🔷 mihomo-*.yaml    # 2 份：黑名单 / 白名单
 ├── 🔶 surge-*.list     # 2 份，与 mihomo 一一对应
+├── 🔵 sing-box-*.json  # 2 份，与 mihomo 一一对应（rule-set source 格式）
 ├── 📝 custom-*.list    # 2 份人工维护源（--extra / --extra-white）
 ├── 🧪 skill/           # 转换脚本 + 方法论
 └── 📁 DetailsReadme/   # 本文档
 ```
 
-📌 `mihomo-*.yaml` 是顶层 `payload` 列表，`surge-*.list` 是 RULE-SET 文本，**内容不可互换**。`custom-*.list` 是唯一需要手工编辑的文件；生成产物重跑一次即被覆盖。
+📌 `mihomo-*.yaml` 是顶层 `payload` 列表，`surge-*.list` 是 RULE-SET 文本，`sing-box-*.json` 是 rule-set source 格式，**内容不可互换**。`custom-*.list` 是唯一需要手工编辑的文件；生成产物重跑一次即被覆盖。
 
 ---
 

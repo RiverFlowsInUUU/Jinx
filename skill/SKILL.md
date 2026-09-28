@@ -10,7 +10,7 @@ agent_created: true
 
 把一个平台的域名黑/白名单，转换成另一个平台能吃的格式并接入。
 
-典型场景：某 App 的广告只有 Jinx（iOS 系统级 DNS 拦截）拦得住，AWAvenue-Ads 拦不住 → 把 Jinx 的黑名单补进 mihomo / Surge。
+典型场景：某 App 的广告只有 Jinx（iOS 系统级 DNS 拦截）拦得住，AWAvenue-Ads 拦不住 → 把 Jinx 的黑名单补进 mihomo / Surge / sing-box。
 
 ## 铁律
 
@@ -38,19 +38,20 @@ agent_created: true
 
 ## 通配语义映射表（核心知识）
 
-| 源写法 | mihomo | Surge | 说明 |
-|---|---|---|---|
-| `x.com`（黑名单） | **`DOMAIN-SUFFIX,x.com`** | **`DOMAIN-SUFFIX,x.com`** | 后缀语义：域名 + 全部子域 |
-| `x.com`（白名单） | `DOMAIN,x.com` | `DOMAIN,x.com` | 精确语义：仅该域名本身 |
-| `*.x.com` | **`DOMAIN-SUFFIX,x.com`** 或 `+.x.com` | `DOMAIN-WILDCARD,*.x.com` 或 `DOMAIN-SUFFIX,x.com` | ⚠️ mihomo 的 `*.x.com` **只匹配一级且不跨点**，直接用会漏多级子域 |
-| `p*-ad.x.com` | **`DOMAIN-REGEX,^p.*-ad\.x\.com$`** | `DOMAIN-WILDCARD,p*-ad.x.com` | mihomo **不支持星号内嵌** |
-| `.x.com` | `.x.com`（多级子域，不含裸域） | — | mihomo 专有 |
-| `+.x.com` | `+.x.com`（多级子域 **含**裸域） | — | mihomo 专有 |
+| 源写法 | mihomo | Surge | sing-box | 说明 |
+|---|---|---|---|---|
+| `x.com`（黑名单） | **`DOMAIN-SUFFIX,x.com`** | **`DOMAIN-SUFFIX,x.com`** | **`domain_suffix: ["x.com"]`** | 后缀语义：域名 + 全部子域 |
+| `x.com`（白名单） | `DOMAIN,x.com` | `DOMAIN,x.com` | `domain: ["x.com"]` | 精确语义：仅该域名本身 |
+| `*.x.com` | **`DOMAIN-SUFFIX,x.com`** 或 `+.x.com` | `DOMAIN-WILDCARD,*.x.com` 或 `DOMAIN-SUFFIX,x.com` | `domain_suffix: ["x.com"]` | ⚠️ mihomo 的 `*.x.com` **只匹配一级且不跨点**，直接用会漏多级子域 |
+| `p*-ad.x.com` | **`DOMAIN-REGEX,^p.*-ad\.x\.com$`** | `DOMAIN-WILDCARD,p*-ad.x.com` | `domain_regex: ["^p.*-ad\\.x\\.com$"]` | mihomo **不支持星号内嵌**；sing-box 用 Go RE2，转换式与 mihomo 相同 |
+| `.x.com` | `.x.com`（多级子域，不含裸域） | — | `domain_suffix: [".x.com"]`（前导点 = 仅子域） | mihomo 专有 |
+| `+.x.com` | `+.x.com`（多级子域 **含**裸域） | — | `domain_suffix: ["x.com"]` | mihomo 专有 |
 
 **官方依据**
 - mihomo（`wiki.metacubex.one/handbook/syntax/`，域名通配符章节）：`*` 一次只匹配一级；`+` / `.` 可匹配多级但只能作前缀；含裸域用 `+.x`。**与 `DOMAIN-WILDCARD` 不是同一套语法。**
 - Surge（`manual.nssurge.com/rules/domain.html`）：`*` 匹配任意字符**且跨点**（`*.example.com` 匹配 `a.b.example.com`）、`?` 匹配一个字符、支持 `[...]` 字符类 → **与通用 glob 等价**。
 - Surge `DOMAIN-SET`：一行一条，裸域名 = DOMAIN，`.x.com` = DOMAIN-SUFFIX，**不支持 `*`**，上限 100 万条，性能优于 RULE-SET。
+- sing-box（`sing-box.sagernet.org`，rule-set / Headless Rule，内核 1.14.2）：source 格式 JSON 顶层 `{"version": 5, "rules": [...]}`；`domain_suffix` 不带点 = 自身 + 全部子域（域段级边界，实证 `sagernet/sing` 的 `common/domain/matcher.go` trie 实现：`.` 段边界 + 叶子判定），前导点 `.x.com` = 仅子域不含裸域；`domain` = 精确；`domain_regex` = Go RE2。同一 rules 项内域名族字段互为 OR。远程规则集 `type: remote` + `format: "source"` 直接吃 JSON，`.json` 扩展名下 `format` 可省略；`.srs` 是 `rule-set compile` 的二进制产物，远程分发不必用它。
 
 **转换总原则**：黑名单按**跨级放宽**（mihomo 用 `DOMAIN-SUFFIX` / `+.`），宁多拦勿漏拦；白名单反之要谨慎。
 
@@ -91,7 +92,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 
 ⚠️ **降级保留的判据**（仍适用于**诊断**场景，不适用于产出）：判断"对方能不能算覆盖"时，只认**深度语义** —— 对方必须能用 `DOMAIN-SUFFIX` / `DOMAIN-KEYWORD` / 通配罩住该域**及其子域**。AWAvenue 那 949 条 `DOMAIN,` 精确匹配**挡不住子域，一条都不作数**。按"精确命中即已覆盖"的错判据会剔掉 **878 条**（旧版实测；该数随快照漂移，更早一次是 874）。**"字面重叠条数"永远不能当覆盖证据** —— 965 条里 864 条字面重叠，其中 852 条是精确匹配。
 
-## 完整生成（两条命令产出全部 4 个文件）
+## 完整生成（两条命令产出全部 6 个文件）
 
 `Jinx` 的实际重跑流程。先取上游源文件：
 
@@ -103,7 +104,7 @@ done
 cd ..
 ```
 
-再跑两条（⚠️ `--src` 的写法会**原样进产物表头**，要与既有文件保持一致）：
+再跑两条（⚠️ `--src` 的写法会**原样进产物表头**，要与既有文件保持一致；每条命令产出 mihomo / Surge / sing-box 各 1 份）：
 
 ```bash
 SK=skill/scripts/convert_ruleset.py
@@ -119,9 +120,19 @@ python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist
     --extra-white ./custom-direct.list
 ```
 
-预期读数：`ads 3889` / `white-guard 43`（上游白名单 325 条 → guard 裁到 42，再 +1 extra-white）。
+预期读数：`ads 3889` / `white-guard 43`（上游白名单 325 条 → guard 裁到 42，再 +1 extra-white）；sing-box 侧 `ads: domain_suffix=3740 domain_regex=149` / `white-guard: domain=41 domain_suffix=2`。
 
 **验收**：改动前后对 diff，**只允许三处变化** —— 表头 `# entries` 数字、`# extra:` 那一行、末尾按顺序多出/少掉 N 条；其余正文**逐行不变**。
+
+**sing-box 产物校验**（需要内核，JSON 无表头可 diff，用内核验）：
+
+```bash
+sing-box rule-set compile out/sing-box-ads.json -o /tmp/a.srs        # 结构合法即通过
+sing-box rule-set compile out/sing-box-white-guard.json -o /tmp/w.srs
+# 再把两份 JSON 用 type:local + format:source 挂进最小配置跑 sing-box check
+```
+
+⚠️ compile → decompile 回读时 `domain_suffix` 会比原文件少十几条：上游同时存在 `*.x.com` 与 `x.com`，转换后同值，compile 的 trie 折叠重复 —— **语义无损**（mihomo / Surge 侧同样保留这些重复行），不是丢数据。
 
 ## 自定义追加（`--extra`）—— 上游没有、但你要拦的域名
 
@@ -189,6 +200,42 @@ RULE-SET,https://host/surge-ads.list,REJECT,pre-matching,extended-matching
 **Surge 参数两条硬约束**（官方文档原文，易踩）：
 1. `pre-matching` **只支持 REJECT 系策略**——写在 `DIRECT` 行上无意义（白名单行不要加）。
 2. `pre-matching` **不能出现在规则集文件内部**，只能写在 profile 的 `RULE-SET` 行上；文件内出现会被当无效行跳过。规则集文件内部**允许**逐行写 `no-resolve` / `extended-matching`。
+
+**sing-box**（内核 1.14.2 实测）
+
+```json
+{
+  "route": {
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "jinx-white-guard",
+        "format": "source",
+        "url": "https://host/sing-box-white-guard.json",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "jinx-ads",
+        "format": "source",
+        "url": "https://host/sing-box-ads.json",
+        "update_interval": "1d"
+      }
+    ],
+    "rules": [
+      { "rule_set": ["jinx-white-guard"], "outbound": "direct" },
+      { "rule_set": ["jinx-ads"], "action": "reject" }
+    ]
+  }
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `format: "source"` | JSON 源格式，订阅即用；`.json` 扩展名下可省略（官方约定），写明更稳 |
+| `update_interval` | 缺省即 `1d`；远程规则集在 `experimental.cache_file.enabled` 时缓存 |
+| `outbound: "direct"` | 按用户配置里的直连出站 tag 改；`action: "reject"` 拒绝连接 |
+| ~~`download_detour`~~ | **1.14 起废弃，1.16 移除**，下载改走 `http_client` / 默认出站——新配置不要写 |
 
 ## 白名单瘦身（guard list）—— 强烈建议
 
@@ -296,10 +343,11 @@ python upload_repo.py --token <PAT> --repo <owner>/<name> --message "..." \
 
 ## 踩坑记录
 
-- **后缀别乱起（两个平台方向相反）**：
+- **后缀别乱起（三个平台方向不同）**：
   - **mihomo 侧一律 `.yaml`**：`format` 默认就是 `yaml`，文件内容是顶层 `payload` 列表。用 `.list` 会让抄配置的人漏写 `format`（默认按 yaml 解析 → 报错或空规则），或被迫多写一条 `format: text`。社区 mihomo 规则仓库一律 `.yaml` / `.mrs`。
   - **Surge 侧一律 `.list`**：远程 RULE-SET 社区惯例是 `.list`，DOMAIN-SET 常见 `.txt`。`.conf` 是 Surge **主配置文件（profile）专用**，用它会让人误以为是 profile。
-  - 后缀本身不影响两端解析（都按内容识别），但它是**给抄配置的人看的** —— 用错就是文档错误。
+  - **sing-box 侧一律 `.json`**：rule-set source 格式官方约定扩展名——文档明确 `format` 字段在 path/url 用 `json` / `srs` 扩展名时可省略。`.srs` 是 `rule-set compile` 的二进制产物，远程分发 JSON 即可（`format: "source"`），别用 `.srs` 后缀装 JSON。
+  - 后缀本身不影响各端解析（都按内容识别），但它是**给抄配置的人看的** —— 用错就是文档错误。
 - **mihomo YAML 里的 `DOMAIN-REGEX` 要用单引号包**：正则含反斜杠（`^p.*\-ad\.x\.com$`），YAML 双引号会把 `\` 当转义序列吃掉；裸写则要赌内容里没有 `: ` / ` #` 之类元字符。单引号是唯一"完全字面"的写法（内部 `'` 写 `''`）。实测 149 条正则经 `yaml.safe_load` 后反斜杠完整保留。
 - **超广通配会误杀，且白名单救不了**：`ad.*`、`ad-*` 这类一条覆盖几百条的规则（实测 `ad.*` 单条吃掉 855 条精确条目）。转 `DOMAIN-REGEX` 后任何 `ad.xxx.com` 都被拒。**检测方法**：把规则集里所有 REGEX / WILDCARD 逐条去匹配一批真实正常域名（知名站点 + 客户端日志里的 `allowed` 域名），命中即潜在误杀。实测 Jinx 149 条 REGEX 中 84 条属"仅一段固定标签"的宽泛规则，用 49 个正常域名打入即命中 3 条（`^pangolin.*$` 命中 `pangolinstore.com`、`^adx\..*\.com$` 命中 `adx.example.com`、`^jad\-api\..*\.com$` 命中 `jad-api.qq.com`）。**这类误杀对象不在上游白名单里 → 白名单预知不了**，只能靠运行观察。
 - **脏数据**：源文件里会混进 URL 式条目（如 `https://us.l.qq.com/exapp`、`https://ynuf.aliapp.org/savewb.json?`）。**不要整条丢弃**——用正则取出 host 后按普通域名规则处理（`host_of()`），否则白丢几条真实广告域。

@@ -4,6 +4,19 @@
 
 ---
 
+## 2026-09-28
+
+**变更**
+
+- 🔵 **新增 sing-box 支持：`sing-box-ads.json`（3889 条）· `sing-box-white-guard.json`（43 条）** —— rule-set 的 **source 格式**（JSON），不是二进制 `.srs`：远程规则集 `format: "source"` 直接消费，订阅即用。格式依据官方文档（内核 **1.14.2** 实测）：顶层 `{"version": 5, "rules": [...]}`，5 是 1.14.0 引入的当前版本；`.json` 扩展名即 source 格式的约定后缀（`format` 在该扩展名下可省略，示例仍显式写出）。条数与 mihomo / Surge 完全一致，同一次重跑生成。
+  - 📐 **字段映射**：黑名单条目（域 + 全部子域）→ `domain_suffix`（3740），149 条中缀通配 → `domain_regex`（Go RE2，与 mihomo `DOMAIN-REGEX` 转换式相同）；白名单精确条目 → `domain`（41），强制放行条目 → `domain_suffix`（2）。
+  - 🔬 **`domain_suffix` 语义实证**（`sagernet/sing` 的 `common/domain/matcher.go`）：不带点写法命中自身 + 全部子域、域段级边界（`aexample.com` 不误命中）—— 与 mihomo `DOMAIN-SUFFIX` 等价；前导点 `.example.com` 才是「仅子域」，本仓不用。
+  - ✅ **1.14.2 内核全链路验证**：两份 JSON `rule-set compile` 通过；本地挂载与远程（`type: remote` + `format: "source"`）两种接入 `sing-box check` 通过；compile → decompile 回读逐条一致（唯一差 17 条重复折叠，见下）。
+  - 📌 17 条「重复」来自上游同时存在 `*.x.com` 与 `x.com`（转换后同值），mihomo / Surge 侧同样保留这 17 行 —— 重复匹配无副作用，三平台口径一致；compile 成 `.srs` 时 trie 会折叠它们，属语义无损。
+  - 📌 接入示例里 `outbound: "direct"` 按用户自己的直连出站 tag 改；`update_interval` 缺省即 `1d`；1.14 起 `download_detour` 已废弃（1.16 移除），示例不再使用。
+
+- 🧪 `convert_ruleset.py` 同步扩展：黑/白名单两条命令现在各产出 **3 个文件**（mihomo / Surge / sing-box），sing-box 侧元数据只打印到 stdout（source JSON 不支持注释、strict 解析不允许多余字段）。重跑验收：既有 4 个产物 **逐字节不变**（`cmp` 验证），仅新增 2 个 JSON。
+
 ## 2026-09-22
 
 **变更**

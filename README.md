@@ -16,7 +16,7 @@
 
 ## 📥 订阅
 
-📦 四份文件，两个源，内容完全一致；末两行是第三方的秋风广告规则，可叠加。
+📦 六份文件，两个源，内容完全一致；末两行是第三方的秋风广告规则，可叠加。
 
 | 客户端 | 文件 | 条数 | 用途 |
 |:-------|:-----|-----:|:-----|
@@ -24,6 +24,8 @@
 | mihomo / OpenClash | `mihomo-white-guard.yaml` | 43 | 放行 |
 | Surge | `surge-ads.list` | 3889 | 拦截 |
 | Surge | `surge-white-guard.list` | 43 | 放行 |
+| sing-box | `sing-box-ads.json` | 3889 | 拦截 |
+| sing-box | `sing-box-white-guard.json` | 43 | 放行 |
 | mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 · 秋风 |
 | Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 · 秋风 |
 
@@ -34,6 +36,8 @@ https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
 https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml
 https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
 https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json
+https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json
 ```
 
 🔁 **jsDelivr** · 备用
@@ -43,6 +47,8 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
 https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-ads.json
+https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-white-guard.json
 ```
 
 🔀 换备用源：把 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
@@ -96,6 +102,37 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 ```
 
 💡 `pre-matching` 把 REJECT 提前到 DNS / 连接建立阶段，`extended-matching` 按 TLS SNI / HTTP Host 额外匹配，处理 App 直连 IP 的情况 —— 两者都只对 REJECT 系策略生效。
+
+🔷 **sing-box**（1.14.2 实测）
+
+```json
+{
+  "route": {
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "jinx-white-guard",
+        "format": "source",
+        "url": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "jinx-ads",
+        "format": "source",
+        "url": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json",
+        "update_interval": "1d"
+      }
+    ],
+    "rules": [
+      { "rule_set": ["jinx-white-guard"], "outbound": "direct" },
+      { "rule_set": ["jinx-ads"], "action": "reject" }
+    ]
+  }
+}
+```
+
+💡 `format` 写 `source`（JSON 源格式），不用二进制 `.srs`，订阅即用无需本地编译。💡 `outbound` 的 `direct` 指配置里直连出站的 tag，按自己的配置改。💡 `update_interval` 缺省就是 `1d`，写出来仅为醒目；1.14 起 `download_detour` 已废弃（1.16 移除），下载走 `http_client` / 默认出站。📌 白名单规则排在拦截之前，与 mihomo / Surge 同序。
 
 📌 叠加秋风规则时，把它排在 Jinx **之后**。
 
