@@ -2,21 +2,39 @@
 
 # 🛑 Jinx 去广告规则
 
-**iOS 拦得住的广告，mihomo 和 Surge 也拦得住**
+**iOS 拦得住的广告，mihomo / Surge / sing-box 也拦得住**
 
 上游 Jinx 黑/白名单的格式转换 · 规则一条不增不减
 
 [![Source](https://img.shields.io/badge/Source-Jinx%203.1.9-8250df?style=flat-square)](https://github.com/VME98/jinx-rules)
-[![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](https://github.com/RiverFlowsInUUU/Jinx)
-[![Surge](https://img.shields.io/badge/Surge-RULE--SET-orange?style=flat-square)](https://github.com/RiverFlowsInUUU/Jinx)
-[![Rules](https://img.shields.io/badge/Ads-3889-0969da?style=flat-square)](https://github.com/RiverFlowsInUUU/Jinx)
 [![License](https://img.shields.io/badge/License-%E6%9C%AA%E5%A3%B0%E6%98%8E-critical?style=flat-square)](#-来源与许可)
+
+[![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](#-接入)
+[![Surge](https://img.shields.io/badge/Surge-RULE--SET-orange?style=flat-square)](#-接入)
+[![sing-box](https://img.shields.io/badge/sing--box-source%20JSON-blue?style=flat-square)](#-接入)
+
+[![Ads](https://img.shields.io/badge/%E6%8B%A6%E6%88%AA-3889%20%E6%9D%A1-0969da?style=flat-square)](#-订阅)
+[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-43%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
+[![AWAvenue](https://img.shields.io/badge/%E7%A7%8B%E9%A3%8E-965%20%E6%9D%A1-f9c513?style=flat-square)](#-订阅)
 
 </div>
 
+## 🧭 目录
+
+- [📥 订阅](#-订阅)
+  - [🧱 Jinx 规则集](#-jinx-规则集)
+  - [🤝 AWAvenue 秋风广告规则](#-awavenue-秋风广告规则)
+- [🔌 接入](#-接入)
+- [📋 规则顺序](#-规则顺序)
+- [🚧 OpenClash](#-openclash)
+- [📖 文档](#-文档)
+- [📚 来源与许可](#-来源与许可)
+
 ## 📥 订阅
 
-📦 六份文件，两个源，内容完全一致；末三行是第三方的秋风广告规则（官方直链），可叠加。
+### 🧱 Jinx 规则集
+
+📦 六份文件 × 两个源，内容完全一致，订阅任选其一。
 
 | 客户端 | 文件 | 条数 | 用途 |
 |:-------|:-----|-----:|:-----|
@@ -26,9 +44,6 @@
 | Surge | `surge-white-guard.list` | 43 | 放行 |
 | sing-box | `sing-box-ads.json` | 3889 | 拦截 |
 | sing-box | `sing-box-white-guard.json` | 43 | 放行 |
-| mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 · 秋风 |
-| Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 · 秋风 |
-| sing-box | `AWAvenue-Ads-Rule-Singbox.json`（官方直链） | 965 | 拦截 · 秋风 |
 
 ⭐ **Raw GitHub** · 首选
 
@@ -54,9 +69,15 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-white-guard.json
 
 🔀 换备用源：把 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
 
-🤝 **AWAvenue 秋风广告规则** · 第三方 · 可叠加 · 仅给 Raw 源
+### 🤝 AWAvenue 秋风广告规则
 
-⚠️ 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。
+🍂 第三方规则，官方直链，可叠加；上游每日更新，条数以官方文件头为准。
+
+| 客户端 | 文件 | 条数 | 用途 |
+|:-------|:-----|-----:|:-----|
+| mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 |
+| Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 |
+| sing-box | `AWAvenue-Ads-Rule-Singbox.json` | 965 | 拦截 |
 
 ```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
@@ -64,11 +85,17 @@ https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWA
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Singbox.json
 ```
 
-💡 sing-box 版是官方自己的 rule-set source 格式（JSON），`type: remote` + `format: "source"` 直接挂，tag 排在 `jinx-ads` 之后；条数与字段构成见 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) 第 3 章。
+> [!WARNING]
+> 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。叠加时把秋风排在 Jinx **之后**。
+
+💡 sing-box 版是官方自己的 rule-set source 格式，`format: "source"` 直接挂，无需本地编译；条数与字段构成见 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) 第 3 章。
 
 ## 🔌 接入
 
-🔷 **mihomo / OpenClash**
+🔽 点开对应客户端展开配置；白名单规则在前、拦截在后，其余规则接在后面。
+
+<details open>
+<summary>🔷 <b>mihomo / OpenClash</b> · rule-providers</summary>
 
 ```yaml
 rule-providers:
@@ -94,7 +121,14 @@ rules:
   # 其余规则接在后面
 ```
 
-🔶 **Surge**
+💡 `behavior: classical` 不能改成 `domain` —— 文件是逐条规则，不是域名集合。
+
+💡 `format: yaml` 与 `.yaml` 后缀配套（mihomo 的缺省格式，显式写出防抄错）。
+
+</details>
+
+<details>
+<summary>🔶 <b>Surge</b> · RULE-SET</summary>
 
 ```
 [Rule]
@@ -105,9 +139,12 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 # 其余规则接在后面
 ```
 
-💡 `pre-matching` 把 REJECT 提前到 DNS / 连接建立阶段，`extended-matching` 按 TLS SNI / HTTP Host 额外匹配，处理 App 直连 IP 的情况 —— 两者都只对 REJECT 系策略生效。
+💡 `pre-matching` 把 REJECT 提前到 DNS / 连接建立阶段，`extended-matching` 按 TLS SNI / HTTP Host 额外匹配，处理 App 直连 IP 的情况 —— 两者都只对 REJECT 系策略生效，白名单行不加。
 
-🔷 **sing-box**（1.14.2 实测）
+</details>
+
+<details>
+<summary>🔷 <b>sing-box</b> · rule_set（1.14.2 实测）</summary>
 
 ```json
 {
@@ -136,9 +173,13 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 }
 ```
 
-💡 `format` 写 `source`（JSON 源格式），不用二进制 `.srs`，订阅即用无需本地编译。💡 `outbound` 的 `direct` 指配置里直连出站的 tag，按自己的配置改。💡 `update_interval` 缺省就是 `1d`，写出来仅为醒目；1.14 起 `download_detour` 已废弃（1.16 移除），下载走 `http_client` / 默认出站。📌 白名单规则排在拦截之前，与 mihomo / Surge 同序。
+💡 `format: "source"` 是 JSON 源格式，不用二进制 `.srs`，订阅即用。
 
-📌 叠加秋风规则时，把它排在 Jinx **之后**。
+💡 `outbound` 的 `direct` 指配置里直连出站的 tag，按自己的配置改。
+
+💡 `update_interval` 缺省就是 `1d`；1.14 起 `download_detour` 已废弃（1.16 移除），不要再用。
+
+</details>
 
 ## 📋 规则顺序
 
@@ -150,17 +191,26 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 | 2 | 🚫 广告拦截 | `REJECT` |
 | 3 | 🚦 常规分流（`GEOSITE,cn` / `GEOIP,cn`） | `DIRECT` |
 
-⚠️ 国内广告域名多数同时属于「中国大陆域名」—— `GEOSITE,cn` 若排到 `REJECT` 之前会先命中放行，广告规则再没有机会执行。
+> [!WARNING]
+> 国内广告域名多数同时属于「中国大陆域名」—— `GEOSITE,cn` 若排到 `REJECT` 之前会先命中放行，广告规则再没有机会执行。
 
 ## 🚧 OpenClash
 
-📌 `绕过中国大陆 IP`（`china_ip_route`）默认常开。开着时目标属大陆的连接直接放行、**不进入内核**，规则不生效，日志里也没有记录。用本规则集要关掉它：
+> [!IMPORTANT]
+> `绕过中国大陆 IP`（`china_ip_route`）默认常开：目标属大陆的连接直接放行、**不进入内核**，规则不生效、日志无记录。用本规则集必须关掉它。
+
+<details>
+<summary>🔧 关闭命令（SSH）</summary>
 
 ```bash
 uci set openclash.config.china_ip_route='0'
 uci commit openclash
 /etc/init.d/openclash restart
 ```
+
+</details>
+
+🔁 回滚：把 `'0'` 改回 `'1'` 再重启即可。
 
 ## 📖 文档
 
