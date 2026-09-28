@@ -64,6 +64,12 @@
 
 🔢 条数以它文件头的 `#Total lines` 为准（2026-09-22 为 v1.7.8：`RULE-SET` 965 / 裸域名 961 / `Clash-Classical` 965）。上游每日更新，**别用自己数的行数去否定它的自报值**。
 
+🔵 **sing-box 侧用官方现成的 `AWAvenue-Ads-Rule-Singbox.json`**（2026-09-28 实测）：
+
+- 📐 它已是 rule-set 的 **source 格式**（`version: 3`，1.14.2 内核 `rule-set compile` 验证兼容），订阅即用，与「不用 `.srs`」的口径一致。
+- 🔍 条数 965 与 `RULE-SET` 版同源：`domain` 949 + `domain_suffix` 12 + `domain_keyword` 4 —— 4 条关键词规则（`-ad.sm.cn` 等）在 sing-box 里有原生 `domain_keyword` 字段，无转换损失。
+- 🚫 本仓不镜像这份文件：官方每日更新，快照必然滞后，且官方已是目标格式、镜像无加工价值 —— 与 Jinx 侧「格式转换镜像」的定位不同。订阅直接用官方 Raw 地址。
+
 🔗 由 [TG-Twilight/AWAvenue-Ads-Rule](https://github.com/TG-Twilight/AWAvenue-Ads-Rule) 维护（GPL-3.0）· 更多格式见[官方订阅生成器](https://awavenue.top/Sub.html)。
 
 ---

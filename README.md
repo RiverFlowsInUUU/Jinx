@@ -16,7 +16,7 @@
 
 ## 📥 订阅
 
-📦 六份文件，两个源，内容完全一致；末两行是第三方的秋风广告规则，可叠加。
+📦 六份文件，两个源，内容完全一致；末三行是第三方的秋风广告规则（官方直链），可叠加。
 
 | 客户端 | 文件 | 条数 | 用途 |
 |:-------|:-----|-----:|:-----|
@@ -28,6 +28,7 @@
 | sing-box | `sing-box-white-guard.json` | 43 | 放行 |
 | mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 · 秋风 |
 | Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 · 秋风 |
+| sing-box | `AWAvenue-Ads-Rule-Singbox.json`（官方直链） | 965 | 拦截 · 秋风 |
 
 ⭐ **Raw GitHub** · 首选
 
@@ -60,7 +61,10 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-white-guard.json
 ```
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
 https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
+https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Singbox.json
 ```
+
+💡 sing-box 版是官方自己的 rule-set source 格式（JSON），`type: remote` + `format: "source"` 直接挂，tag 排在 `jinx-ads` 之后；条数与字段构成见 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) 第 3 章。
 
 ## 🔌 接入
 

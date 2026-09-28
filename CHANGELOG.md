@@ -17,6 +17,8 @@
 
 - 🧪 `convert_ruleset.py` 同步扩展：黑/白名单两条命令现在各产出 **3 个文件**（mihomo / Surge / sing-box），sing-box 侧元数据只打印到 stdout（source JSON 不支持注释、strict 解析不允许多余字段）。重跑验收：既有 4 个产物 **逐字节不变**（`cmp` 验证），仅新增 2 个 JSON。
 
+- 🤝 **秋风（AWAvenue）订阅清单补齐 sing-box 行** —— 官方本就有现成的 `AWAvenue-Ads-Rule-Singbox.json`（rule-set source 格式，`version: 3`，1.14.2 内核 compile 验证兼容），README 订阅表与地址块各加一行官方直链，三平台对齐。965 条与 `RULE-SET` 版同源（`domain` 949 + `domain_suffix` 12 + `domain_keyword` 4，关键词规则有原生字段、无转换损失）。**本仓不镜像这份文件**：官方每日更新、快照必滞后，且官方已是目标格式、镜像无加工价值 —— 与 Jinx 侧「格式转换镜像」的定位不同（口径入 DetailsReadme 第 3 章）。
+
 ## 2026-09-22
 
 **变更**
