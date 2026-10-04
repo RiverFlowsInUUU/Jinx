@@ -27,6 +27,7 @@
 - [📥 订阅](#-订阅)
   - [🧱 Jinx 规则集](#-jinx-规则集)
   - [🤝 AWAvenue 秋风广告规则](#-awavenue-秋风广告规则)
+- [🧬 一条不差 · 三端同源](#-一条不差--三端同源)
 - [🔌 接入](#-接入)
 - [📋 规则顺序](#-规则顺序)
 - [🚧 OpenClash](#-openclash)
@@ -92,6 +93,23 @@ https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWA
 > 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。叠加时把秋风排在 Jinx **之后**。
 
 💡 sing-box 版是官方自己的 rule-set source 格式，`format: "source"` 直接挂，无需本地编译；条数与字段构成见 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) 第 3 章。
+
+---
+
+## 🧬 一条不差 · 三端同源
+
+🔬 不是"抄了一份列表"，是**同一批规则换个写法的镜像** —— 三端逐条等价，由 CI 每次提交对拍。
+
+| <div align="center">维度</div> | <div align="center">Jinx 规则集</div> | <div align="center">说明</div> |
+|:--|:--|:--|
+| 🚫 拦截 | **3889 条** | 3740 条域名后缀 + 149 条中缀通配 |
+| 🛡️ 放行 | **44 条** | 41 条精确 + 3 条后缀（含 2 条手工补充） |
+| 🧩 三端一致 | **逐条等价** | mihomo / Surge / sing-box 归一化后零差异 |
+| ✂️ 增删 | **一条不增不减** | 只做格式转换，不改上游判定 |
+| 🔁 可复现 | **逐字节一致** | 产物 == 源头重跑结果，CI 对拍 |
+| 📌 上游快照 | `3.1.9` · `2026-09-15` | 上游更新后需重跑生成 |
+
+🚫 **只做减法不做加法**：本仓不替你判断"哪些广告该拦"，上游收录什么就转什么。唯一例外是 `custom-*.list` 里人工补充的域名，每一条都写明依据。
 
 ---
 
@@ -241,7 +259,14 @@ uci commit openclash
 
 ## 📚 来源与许可
 
-📄 上游 [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules)（数据 `3.1.9` · `2026-09-15`，未声明许可）。规则数据版权归上游及其原始来源，本仓不主张任何权利；`skill/` 下的脚本与方法论不含上游数据，可自由取用。上游权利人如有异议，开 issue 即下架。
+| <div align="center">项</div> | <div align="center">说明</div> |
+|:--|:--|
+| 📄 上游 | [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules) · 数据 `3.1.9` · `2026-09-15` |
+| ⚖️ 许可 | 上游未声明（`license: null`），本仓亦不主张 |
+| 🧬 规则数据 | 版权归上游及其原始来源 |
+| 🧪 `skill/` | 转换脚本与方法论，不含上游数据，可自由取用 |
+
+📮 上游权利人如有异议，开 issue 即下架。
 
 ---
 
