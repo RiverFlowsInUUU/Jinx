@@ -20,6 +20,8 @@
 
 </div>
 
+> 🤖 **AI agent 请从这里开始** → [`skill/SKILL.md`](skill/SKILL.md)：改完必跑的那一条命令，和六条不要越的线。
+
 ## 🧭 目录
 
 - [📥 订阅](#-订阅)
@@ -33,11 +35,11 @@
 
 ## 📥 订阅
 
-### 🧱 Jinx 规则集
-
 📦 六份文件 × 两个源，内容完全一致，订阅任选其一。
 
-| 客户端 | 文件 | 条数 | 用途 |
+### 🧱 Jinx 规则集
+
+| <div align="center">客户端</div> | <div align="center">文件</div> | <div align="center">条数</div> | <div align="center">用途</div> |
 |:-------|:-----|-----:|:-----|
 | mihomo / OpenClash | `mihomo-ads.yaml` | 3889 | 拦截 |
 | mihomo / OpenClash | `mihomo-white-guard.yaml` | 44 | 放行 |
@@ -74,7 +76,7 @@ https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-white-guard.json
 
 🍂 第三方规则，官方直链，可叠加；上游每日更新，条数以官方文件头为准。
 
-| 客户端 | 文件 | 条数 | 用途 |
+| <div align="center">客户端</div> | <div align="center">文件</div> | <div align="center">条数</div> | <div align="center">用途</div> |
 |:-------|:-----|-----:|:-----|
 | mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 |
 | Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 |
@@ -91,9 +93,11 @@ https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWA
 
 💡 sing-box 版是官方自己的 rule-set source 格式，`format: "source"` 直接挂，无需本地编译；条数与字段构成见 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) 第 3 章。
 
+---
+
 ## 🔌 接入
 
-🔽 点开对应客户端展开配置；白名单规则在前、拦截在后，其余规则接在后面。
+🎯 贴进去就能用；白名单规则在前、拦截在后，其余规则接在后面。
 
 <details open>
 <summary>🔷 <b>mihomo / OpenClash</b> · rule-providers</summary>
@@ -182,11 +186,13 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 
 </details>
 
+---
+
 ## 📋 规则顺序
 
-🔽 自上而下，先匹配先赢。
+🔽 自上而下，先匹配先赢 —— 顺序错了，规则等于没加。
 
-| 顺序 | 规则 | 去向 |
+| <div align="center">顺序</div> | <div align="center">规则</div> | <div align="center">去向</div> |
 |:-:|:-----|:-----|
 | 1 | 🛡️ 白名单 | `DIRECT` |
 | 2 | 🚫 广告拦截 | `REJECT` |
@@ -195,7 +201,11 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 > [!WARNING]
 > 国内广告域名多数同时属于「中国大陆域名」—— `GEOSITE,cn` 若排到 `REJECT` 之前会先命中放行，广告规则再没有机会执行。
 
+---
+
 ## 🚧 OpenClash
+
+🔧 一个开关决定规则生不生效 —— 装完先看这一节。
 
 > [!IMPORTANT]
 > `绕过中国大陆 IP`（`china_ip_route`）默认常开：目标属大陆的连接直接放行、**不进入内核**，规则不生效、日志无记录。用本规则集必须关掉它。
@@ -213,15 +223,21 @@ uci commit openclash
 
 🔁 回滚：把 `'0'` 改回 `'1'` 再重启即可。
 
+---
+
 ## 📖 文档
 
-| 文档 | 内容 |
+📚 按需查阅 —— 常用操作在首页，原理与推导在下沉文档。
+
+| <div align="center">文档</div> | <div align="center">内容</div> |
 |:-----|:-----|
 | 📘 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) | 白名单来源 · 两个源的缓存与生效判据 · 秋风对比 · 转换原理 · OpenClash 细节 |
 | 🧪 [`skill/SKILL.md`](skill/SKILL.md) | 匹配语义判定 · 通配映射 · 白名单瘦身 · 生成命令 · 验收闸门 |
 | 🗓️ [`CHANGELOG.md`](CHANGELOG.md) | 规则变动记录 |
 
 🧷 六份文件同一次生成、内容等价，由 CI 每次提交自动校验（三格式逐条比对 + 条数声明 + 产物可复现），读数字不符会直接标红。
+
+---
 
 ## 📚 来源与许可
 
