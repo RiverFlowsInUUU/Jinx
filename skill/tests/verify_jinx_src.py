@@ -1,0 +1,698 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Jinx 规则集一致性断言 —— 守「规则一条不增不减」这条立仓之本。
+
+本仓是纯格式转换镜像：六份产物由 skill/scripts/convert_ruleset.py 生成，
+承诺「三平台内容等价、条数与文档声明一致」。这些承诺此前**只靠人工对拍**，
+一次误改（手滑编辑产物、改了源头忘了重跑、改了条数忘了同步文档）就会静默
+破坏它且无人察觉。本脚本把它们固化成断言。
+
+退出码（全仓统一四态，勿改语义）:
+  0  全部断言通过
+  1  存在判负项
+  2  前置环境不达标（仓根不对 / 必需文件缺失，判据无法执行）
+  3  SKIP（依赖项缺失，未验证 ≠ 绿）
+
+用法:
+  python skill/tests/verify_jinx_src.py          # 在仓根执行
+  python skill/tests/verify_jinx_src.py --root . # 显式指定仓根
+
+断言清单（9 段）:
+  1. 六份产物存在且非空
+  2. 三格式条数一致（ads 三份互等 / white-guard 三份互等）
+  3. 跨格式语义等价（归一化后逐条比对，不是只比条数）
+  4. 文件头 # entries 自述 == 实际条数
+  5. 文档声明的条数 == 文件实际条数（README / DetailsReadme）
+  6. 产物 == 源头重跑生成的结果（防手改产物 / 防改了源头忘了重跑）
+  7. 源头文件（custom-*.list）的表头 extra 声明与实际条数一致
+  8. 文案规范：emoji 只出现在行首 + 密度下限
+  9. 行尾符与 BOM（BOM 硬判负；行尾只做同族一致性与事实播报）
+
+闸门自身可信度由 skill/tests/selftest_negative.py 保证：它在临时副本仓里
+制造 6 种典型错误，要求本脚本逐一判负 —— 防止闸门退化成「永远绿的空操作」。
+
+第 8 段的 emoji 判定按「emoji 之前只许出现结构字符（标题 / 列表 / 引用标记、
+表格竖线、`[`、树形框线、缩进）」—— 这条口径来自 2026-09-22 用户要求，
+SKILL.md 第 280 行引用本脚本为该断言的实现。
+"""
+import argparse
+import io
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+# Windows 中文环境（ACP=936）下子进程 stdout 走管道时 Python 用 cp936 编码，
+# print 一个非 GBK 字符（✅/❌/⚠️）就 UnicodeEncodeError 并以退出码 1 结束 ——
+# 而 1 恰是本仓「判负」的码，崩溃会被读成「判负」。必须在任何输出前兜底。
+for _s in ('stdout', 'stderr'):
+    _f = getattr(sys, _s, None)
+    if _f is not None and hasattr(_f, 'reconfigure'):
+        try:
+            _f.reconfigure(encoding='utf-8', errors='replace')
+        except (ValueError, OSError):
+            pass
+
+EXIT_PASS, EXIT_FAIL, EXIT_ENV, EXIT_SKIP = 0, 1, 2, 3
+
+# 六份产物的固定名（与 convert_ruleset.py --naming repo 一致）
+PRODUCTS = {
+    'ads': {
+        'mihomo': 'mihomo-ads.yaml',
+        'surge': 'surge-ads.list',
+        'singbox': 'sing-box-ads.json',
+    },
+    'white-guard': {
+        'mihomo': 'mihomo-white-guard.yaml',
+        'surge': 'surge-white-guard.list',
+        'singbox': 'sing-box-white-guard.json',
+    },
+}
+
+# 生成命令的固定参数（与 SKILL.md「完整生成」节一致）。
+#
+# ⚠️ `--src` 的写法会**原样进产物表头**（SKILL.md 第 107 行），必须与既有文件
+#    逐字一致，否则「可复现」一段会把表头差异误报成内容差异。实测踩坑：
+#    ads 线线上表头是 `# source: jinx-rules`（无 `./`），white-guard 线是
+#    `# source: ./jinx-rules`（有 `./`）—— 两条命令的写法本就不同，不是笔误。
+REGEN = {
+    'ads': ['--src', 'jinx-rules',
+            '--fixed', 'blacklist.txt', '--wild', 'blacklist_wildcard.txt',
+            '--tag', 'ads', '--mode', 'suffix', '--extra', 'custom-ads.list'],
+    'white-guard': ['--src', './jinx-rules',
+                    '--fixed', 'whitelist.txt', '--wild', 'whitelist_wildcard.txt',
+                    '--tag', 'white-guard', '--mode', 'exact',
+                    '--guard-against-fixed', 'blacklist.txt',
+                    '--guard-against-wild', 'blacklist_wildcard.txt',
+                    '--extra-white', 'custom-direct.list'],
+}
+SRC_DIR = 'jinx-rules'
+
+# sing-box 字段名 -> 规范化类型名（与 mihomo / Surge 对齐）
+SB_FIELD = {
+    'domain': 'DOMAIN',
+    'domain_suffix': 'DOMAIN-SUFFIX',
+    'domain_keyword': 'DOMAIN-KEYWORD',
+    'domain_regex': 'DOMAIN-REGEX',
+}
+# Surge 独有写法 -> mihomo 等价类型
+SURGE_ALIAS = {
+    'HOST': 'DOMAIN',
+    'HOST-SUFFIX': 'DOMAIN-SUFFIX',
+    'HOST-KEYWORD': 'DOMAIN-KEYWORD',
+    'DOMAIN-WILDCARD': 'DOMAIN-REGEX',
+    'DOMAIN-SET': 'DOMAIN-SUFFIX',
+}
+
+
+class Report:
+    def __init__(self):
+        self.rows = []          # (ok, section, msg)
+
+    def judge(self, cond, section, msg, detail=''):
+        self.rows.append((bool(cond), section, msg, detail))
+        return bool(cond)
+
+    def section(self, name):
+        self.rows.append((None, name, '', ''))
+
+    @property
+    def failed(self):
+        return [r for r in self.rows if r[0] is False]
+
+    def render(self):
+        out = []
+        sec = '?'
+        for ok, s, msg, detail in self.rows:
+            if ok is None:
+                sec = s
+                out.append('')
+                out.append(f'── {s} ' + '─' * max(0, 56 - len(s)))
+                continue
+            mark = '✅' if ok else '❌'
+            out.append(f'  {mark} {msg}')
+            if detail and not ok:
+                for line in str(detail).splitlines():
+                    out.append(f'       {line}')
+        return '\n'.join(out)
+
+
+# ---------------------------------------------------------------- 解析
+
+def _strip_quotes(s):
+    s = s.strip()
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in "'\"":
+        s = s[1:-1]
+    return s.strip()
+
+
+def parse_mihomo(path):
+    """mihomo rule-provider：顶层 payload 列表，条目形如 `  - 'DOMAIN,x.com'`。"""
+    out = []
+    for line in Path(path).read_text(encoding='utf-8').splitlines():
+        s = line.strip()
+        if s.startswith('- '):
+            out.append(_strip_quotes(s[2:]))
+    return out
+
+
+def parse_surge(path):
+    """Surge RULE-SET：一行一条，`#` 开头为注释。"""
+    out = []
+    for line in Path(path).read_text(encoding='utf-8').splitlines():
+        s = line.strip()
+        if s and not s.startswith('#') and not s.startswith('//'):
+            out.append(s)
+    return out
+
+
+def parse_singbox(path):
+    """sing-box rule-set source JSON：{"version":5,"rules":[{字段: [...]}]}。
+
+    返回扁平化的 (规范化类型, 值) 列表。
+    """
+    doc = json.loads(Path(path).read_text(encoding='utf-8'))
+    out = []
+    for rule in doc.get('rules', []):
+        for field, values in rule.items():
+            kind = SB_FIELD.get(field)
+            if kind is None:
+                continue
+            for v in values:
+                out.append((kind, str(v)))
+    return out
+
+
+def normalize_rule(entry, alias):
+    """把一行规则归一化成 (类型, 小写值)，用于跨格式比对。
+
+    值本身不做语义化（正则 vs 通配的差异在 compare() 里单独处理）。
+    """
+    parts = [p.strip() for p in entry.split(',')]
+    kind = parts[0].upper()
+    kind = alias.get(kind, kind)
+    val = parts[1].lower() if len(parts) > 1 else ''
+    return (kind, val)
+
+
+def glob_to_regex(g):
+    """与 convert_ruleset.py 的 glob_to_regex 保持同一实现（勿各写一套）。"""
+    return '^' + re.escape(g).replace(r'\*', '.*').replace(r'\?', '.') + '$'
+
+
+def canon_set(rules, alias, wildcard_to_regex=False):
+    """归一化集合。wildcard_to_regex=True 时把 Surge DOMAIN-WILDCARD 转成正则形态，
+    以便与 mihomo 的 DOMAIN-REGEX 逐条对上（否则类型不同会被误判成差异）。"""
+    out = set()
+    for e in rules:
+        kind, val = normalize_rule(e, alias)
+        if wildcard_to_regex and kind == 'DOMAIN-REGEX' and not val.startswith('^'):
+            val = glob_to_regex(val)
+        out.add((kind, val))
+    return out
+
+
+# ---------------------------------------------------------------- 各段断言
+
+def seg_products_exist(root, rep):
+    rep.section('1. 产物存在性')
+    for fam, files in PRODUCTS.items():
+        for kind, name in files.items():
+            p = root / name
+            ok = p.is_file() and p.stat().st_size > 0
+            rep.judge(ok, 'prod', f'{name} 存在且非空' if ok else f'{name} 缺失或为空',
+                      '产物是订阅地址的落点，缺失会让客户端拉取 404')
+
+
+def seg_counts_consistent(root, rep, counts):
+    rep.section('2. 三格式条数一致')
+    for fam, files in PRODUCTS.items():
+        vals = {k: counts[fam][k] for k in ('mihomo', 'surge', 'singbox')}
+        uniq = set(vals.values())
+        rep.judge(len(uniq) == 1,
+                  'count',
+                  f'{fam}: mihomo {vals["mihomo"]} / surge {vals["surge"]} / sing-box {vals["singbox"]}'
+                  + ('  一致' if len(uniq) == 1 else '  不一致'),
+                  '三平台必须内容等价 —— 本仓承诺「规则一条不增不减」')
+
+
+def seg_cross_format(root, rep):
+    rep.section('3. 跨格式语义等价')
+    families = {
+        'ads': (root / PRODUCTS['ads']['mihomo'],
+                root / PRODUCTS['ads']['surge'],
+                root / PRODUCTS['ads']['singbox']),
+        'white-guard': (root / PRODUCTS['white-guard']['mihomo'],
+                        root / PRODUCTS['white-guard']['surge'],
+                        root / PRODUCTS['white-guard']['singbox']),
+    }
+    for fam, (pm, ps, pb) in families.items():
+        mi = parse_mihomo(pm)
+        su = parse_surge(ps)
+        sb = parse_singbox(pb)
+        A = canon_set(mi, {})
+        B = canon_set(su, SURGE_ALIAS, wildcard_to_regex=True)
+        C = set((k, v.lower()) for k, v in sb)
+
+        # mihomo vs sing-box：两侧都能表达精确语义，应逐条完全相等
+        only_a, only_c = sorted(A - C), sorted(C - A)
+        rep.judge(not only_a and not only_c, 'cross',
+                  f'{fam}: mihomo vs sing-box 逐条等价（{len(A)} 条）'
+                  if not (only_a or only_c) else
+                  f'{fam}: mihomo vs sing-box 有差异（仅 mihomo {len(only_a)} / 仅 sing-box {len(only_c)}）',
+                  '\n'.join([f'仅 mihomo: {x}' for x in only_a[:4]] +
+                            [f'仅 sing-box: {x}' for x in only_c[:4]]))
+
+        # mihomo vs surge：通配已统一成正则形态
+        only_ab, only_ba = sorted(A - B), sorted(B - A)
+        rep.judge(not only_ab and not only_ba, 'cross',
+                  f'{fam}: mihomo vs surge 逐条等价（{len(A)} 条）'
+                  if not (only_ab or only_ba) else
+                  f'{fam}: mihomo vs surge 有差异（仅 mihomo {len(only_ab)} / 仅 surge {len(only_ba)}）',
+                  '\n'.join([f'仅 mihomo: {x}' for x in only_ab[:4]] +
+                            [f'仅 surge: {x}' for x in only_ba[:4]]))
+
+
+def seg_header_selfcount(root, rep, counts):
+    rep.section('4. 文件头 # entries 自述')
+    for fam, files in PRODUCTS.items():
+        for kind in ('mihomo', 'surge'):
+            p = root / files[kind]
+            head = p.read_text(encoding='utf-8')[:400]
+            m = re.search(r'^#\s*entries:\s*(\d+)\s*$', head, re.M)
+            real = counts[fam][kind]
+            if not m:
+                rep.judge(False, 'hdr', f'{p.name}: 表头缺 # entries 行',
+                          '产物表头契约由 convert_ruleset.py 输出，勿手改')
+                continue
+            rep.judge(int(m.group(1)) == real, 'hdr',
+                      f'{p.name}: 自述 {m.group(1)} == 实际 {real}'
+                      if int(m.group(1)) == real else
+                      f'{p.name}: 自述 {m.group(1)} != 实际 {real}',
+                      '表头自述与实际不符 = 产物被手改过，或改了源头没重跑')
+
+
+def seg_doc_counts(root, rep, counts):
+    """文档声明的条数必须等于文件实际条数。
+
+    只在「当前状态描述」里找（订阅表 / 徽章），**不碰 CHANGELOG 等历史记录** ——
+    历史条目写的是当时的条数，改了就是篡改历史。
+    """
+    rep.section('5. 文档条数声明 == 文件实际')
+    readme = root / 'README.md'
+    details = root / 'DetailsReadme' / 'DetailsReadme.md'
+
+    # 5-a: README 订阅表里每份文件的条数单元格
+    if readme.is_file():
+        text = readme.read_text(encoding='utf-8')
+        for fam, files in PRODUCTS.items():
+            for kind, name in files.items():
+                real = counts[fam][kind]
+                pat = re.compile(r'\|\s*`' + re.escape(name) + r'`\s*\|\s*(\d+)\s*\|')
+                m = pat.search(text)
+                if not m:
+                    rep.judge(False, 'doc', f'README: 订阅表缺 {name} 行',
+                              '订阅表是使用者的选文件依据，六份文件都要列出')
+                    continue
+                rep.judge(int(m.group(1)) == real, 'doc',
+                          f'README 表 {name}: {m.group(1)} == {real}'
+                          if int(m.group(1)) == real else
+                          f'README 表 {name}: 声明 {m.group(1)} != 实际 {real}',
+                          '改了产物必须同步改文档条数')
+
+        # 5-b: README 数据徽章（放行 = white-guard 条数，拦截 = ads 条数）
+        badge = {'%E6%94%BE%E8%A1%8C': 'white-guard', '%E6%8B%A6%E6%88%AA': 'ads'}
+        for enc, fam in badge.items():
+            real = counts[fam]['mihomo']
+            m = re.search(re.escape(enc) + r'-(\d+)%20', text)
+            rep.judge(bool(m) and int(m.group(1)) == real, 'doc',
+                      f'README 徽章 {fam}: {m.group(1) if m else "(缺)"} == {real}'
+                      if m and int(m.group(1)) == real else
+                      f'README 徽章 {fam}: 声明 {m.group(1) if m else "(缺)"} != 实际 {real}',
+                      '徽章是门面读数，与实际不符会被读者当场看出')
+    else:
+        rep.judge(False, 'doc', 'README.md 缺失', '对外交付必须写 README')
+
+    # 5-c: DetailsReadme 表格里的条数，以及「白名单怎么来的」推导式
+    if details.is_file():
+        dtext = details.read_text(encoding='utf-8')
+        for fam, files in PRODUCTS.items():
+            for kind, name in files.items():
+                real = counts[fam][kind]
+                pat = re.compile(r'\|\s*`' + re.escape(name) + r'`\s*\|[^|]*\|\s*(\d+)\s*\|')
+                m = pat.search(dtext)
+                if m:
+                    rep.judge(int(m.group(1)) == real, 'doc',
+                              f'Details 表 {name}: {m.group(1)} == {real}'
+                              if int(m.group(1)) == real else
+                              f'Details 表 {name}: 声明 {m.group(1)} != 实际 {real}',
+                              '同一读数在两个文档里必须一致')
+        # 「共 N 条」这类汇总句
+        real_w = counts['white-guard']['mihomo']
+        for m in re.finditer(r'共\s*(\d+)\s*条', dtext):
+            rep.judge(int(m.group(1)) == real_w, 'doc',
+                      f'Details「共 {m.group(1)} 条」== {real_w}'
+                      if int(m.group(1)) == real_w else
+                      f'Details「共 {m.group(1)} 条」!= 白名单实际 {real_w}',
+                      '白名单推导的结论数必须等于产物条数')
+    else:
+        rep.judge(False, 'doc', 'DetailsReadme/DetailsReadme.md 缺失', '下沉文档必须存在')
+
+
+def seg_reproducible(root, rep):
+    """产物 == 源头重跑的结果。这是「产物是生成物、不是手改物」的最终判据。
+
+    需要上游源文件（jinx-rules/）与脚本。缺源文件时判 SKIP（未验证 ≠ 绿），
+    因为断网环境跑不了 —— 但**绝不静默跳过**。
+    """
+    rep.section('6. 产物可复现（源头重跑）')
+    script = root / 'skill' / 'scripts' / 'convert_ruleset.py'
+    srcdir = root / SRC_DIR
+    if not script.is_file():
+        rep.section('6. 产物可复现（源头重跑）')
+        rep.rows.append((None, 'SKIP: 6. 产物可复现', '', ''))
+        return 'skip'
+    if not srcdir.is_dir():
+        rep.rows.append((None, 'SKIP: 6. 产物可复现', '', ''))
+        return 'skip'
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        for fam, extra in REGEN.items():
+            cmd = [sys.executable, str(script), '--out', tmp, '--naming', 'repo'] + extra
+            proc = subprocess.run(cmd, cwd=str(root), capture_output=True, text=True)
+            if proc.returncode != 0:
+                rep.judge(False, 'repro', f'{fam}: 重跑生成失败（exit {proc.returncode}）',
+                          (proc.stderr or proc.stdout or '')[-400:])
+                continue
+            for kind, name in PRODUCTS[fam].items():
+                gen = Path(tmp) / name
+                cur = root / name
+                if not gen.is_file():
+                    rep.judge(False, 'repro', f'{fam}/{kind}: 重跑未产出 {name}', '')
+                    continue
+                if gen.read_bytes() == cur.read_bytes():
+                    rep.judge(True, 'repro', f'{name}: 重跑结果与仓库文件逐字节一致')
+                    continue
+                # 差异行定位：区分「表头 --src 写法不同」与「内容真的不同」
+                a = cur.read_text(encoding='utf-8').splitlines()
+                b = gen.read_text(encoding='utf-8').splitlines()
+                only_hdr = (len(a) == len(b)
+                            and all(x == y or (x.startswith('#') and y.startswith('#'))
+                                    for x, y in zip(a, b)))
+                detail = [f'仓库: {x}' for x, y in zip(a, b) if x != y][:3] + \
+                         [f'重跑: {y}' for x, y in zip(a, b) if x != y][:3]
+                rep.judge(False, 'repro',
+                          f'{name}: 重跑结果与仓库文件**不一致**'
+                          + ('（仅表头注释行差异：核对 REGEN 表的 --src 写法）' if only_hdr else ''),
+                          '\n'.join(detail) or '行数不同，见 diff')
+    return 'ran'
+
+
+def seg_source_headers(root, rep, counts):
+    """源头 custom-*.list 的 extra 声明与实际条数，以及它是否真的进了产物。"""
+    rep.section('7. 源头 custom-*.list')
+    pairs = [('custom-ads.list', 'ads', '# extra:'),
+             ('custom-direct.list', 'white-guard', '# extra-white:')]
+    for name, fam, header_key in pairs:
+        p = root / name
+        if not p.is_file():
+            rep.judge(False, 'src', f'{name} 缺失', '手工追加域名的唯一入口')
+            continue
+        entries = [l.strip() for l in p.read_text(encoding='utf-8').splitlines()
+                   if l.strip() and not l.strip().startswith('#')]
+        # 产物表头里应出现 `<name>(<N>)`，N == 源头实际条数
+        prod_header = (root / PRODUCTS[fam]['surge']).read_text(encoding='utf-8')[:400]
+        m = re.search(re.escape(name) + r'\((\d+)\)', prod_header)
+        if not m:
+            rep.judge(False, 'src', f'{name}: 产物表头未声明 {name}(N)',
+                      f'预期在 {PRODUCTS[fam]["surge"]} 表头出现 {header_key} {name}(N)')
+            continue
+        rep.judge(int(m.group(1)) == len(entries), 'src',
+                  f'{name}: 表头声明 {m.group(1)} == 源头实际 {len(entries)}'
+                  if int(m.group(1)) == len(entries) else
+                  f'{name}: 表头声明 {m.group(1)} != 源头实际 {len(entries)}',
+                  '源头加了条目但没重跑，或重跑时漏了 --extra / --extra-white')
+
+        # 源头每条都应真实出现在产物里（防止「写进源头但没进产物」）
+        prod_rules = set()
+        for kind in ('mihomo', 'surge'):
+            for e in (parse_mihomo(root / PRODUCTS[fam][kind])
+                      if kind == 'mihomo' else parse_surge(root / PRODUCTS[fam][kind])):
+                prod_rules.add(normalize_rule(e, SURGE_ALIAS))
+        missing = []
+        for e in entries:
+            base = e[2:] if e.startswith('*.') else e.lstrip('.')
+            if ('DOMAIN-SUFFIX', base.lower()) not in prod_rules:
+                missing.append(e)
+        rep.judge(not missing, 'src',
+                  f'{name}: {len(entries)} 条全部落入产物'
+                  if not missing else
+                  f'{name}: {len(missing)} 条未进入产物',
+                  '\n'.join(f'未落盘: {x}' for x in missing[:6]))
+
+
+# emoji 判定：只认「行首结构位」——SKILL.md §对外交付 的口径是
+# 「emoji 只许出现在行首，不得落在句中」，允许的位置包括：
+#   标题（#）、段落引导符、无序列表项、表格单元格起始、目录条目、树形框线、缩进。
+#
+# 判定分三层，且刻意「宽进」——宁可漏报也不给假红：
+#   假红会让人把闸门关掉，比漏报更糟（假绿的教训见 SKILL.md 的 0930 事故）。
+#
+# ① 箭头/数学符号不是 emoji：本仓正文用它们作「流向」标记（`A → B`、
+#    `base64 解码后比对`），须排除。SKILL.md 的既有口径亦写明「箭头不算 emoji」。
+#    ⚠️ 必须**逐个码位**排除，不能整段排除 —— 实测踩坑：U+2B00-2BFF 段里同时住着
+#    箭头（→ U+2192 属 2190 段；⬅⬆⬇ 在 2B05 等）与**真 emoji**（⭐ U+2B50、
+#    ⬛ U+2B1B）。整段排除会让 `上面用的是 ⭐ 首选 Raw` 这种句中 emoji 逃过检查
+#    —— 负样本自测当场抓到该漏报。
+# ② FE0F（变体选择符）必须并入**前一个** emoji 整体消费，不能单独算一个 emoji：
+#    `⚖️` = U+2696 + U+FE0F，若拆开匹配，第一轮在行首命中 `⚖` 通过，第二轮又命中
+#    `FE0F`（此时前缀是 `⚖`，非结构字符）→ **对完全合规的段首引导符给出假红**。
+#    实测踩过：本仓 7 处 `⚖️ / ⏱️ / ⚠️` 行首引导符全被此 bug 误报。
+# ③ 前缀是纯结构字符 → 合法（行首 / 列表 / 引用 / 树形框线）。
+# ④ 前缀含表格竖线、HTML 标签、序号 → 属「单元格起始」或「标题标签内」，合法。
+ARROW_CHARS = set(
+    [chr(c) for c in range(0x2190, 0x21FF + 1)] +      # ← ↑ → ↓ ↔ ↕ 等全部箭头
+    ['\u2b05', '\u2b06', '\u2b07', '\u2b08', '\u2b09', '\u2b0a', '\u2b0b',
+     '\u2b0c', '\u2b0d', '\u2b0e', '\u2b0f', '\u2b10', '\u2b11']  # 二维箭头
+)
+_VS = '\U0000FE0F'
+EMOJI_RE = re.compile(
+    '[\U0001F300-\U0001FAFF'          # 各类图形 emoji
+    '\U0001F000-\U0001F2FF'
+    '\U00002B00-\U00002BFF'           # ⭐ ⬛ ⬜ 等（箭头由 ARROW_CHARS 单独剔除）
+    '\U00002600-\U000027BF]'          # 杂项符号与装饰（⚖ ⏱ ⚠ 🛡 🚫 🗓 等）
+    + _VS + '?')                      # 变体选择符随基字符一起消费
+ARROW_RE = re.compile('[' + re.escape(''.join(sorted(ARROW_CHARS))) + ']')
+
+# 纯结构前缀：行首缩进 / 标题 / 引用 / 列表 / 树形框线 / 单元格竖线
+STRUCT_OK = re.compile(
+    r'^[\s>#\-*+|\[\]`\\/()（）0-9.\u2500-\u257F]*$')
+
+
+def emoji_prefix_ok(prefix):
+    """判断 emoji 之前的前缀是否属「结构位」。"""
+    if STRUCT_OK.match(prefix):
+        return True
+    # HTML 标签（<summary> / <b> / <div …>）剥掉后再判 —— 标签属版式结构
+    stripped = re.sub(r'</?[a-zA-Z][^>]*>', '', prefix)
+    return bool(STRUCT_OK.match(stripped))
+
+
+def find_stray_emoji(text):
+    """返回「落在句中」的 emoji 行号与内容。
+
+    逐行取**最后一个** emoji 之后是否还有实质文字：
+    口径是「emoji 只能在行首结构位」，因此 emoji 后面跟正文是允许的
+    （段落引导符 `⏱️ **缓存…**`、单元格 `| 1 | 🛡️ 白名单 |` 都属此类）；
+    判负的是 **emoji 前面出现了正文**（`上面用的是 ⭐ 首选 Raw` 那种）。
+    """
+    bad = []
+    for i, line in enumerate(text.splitlines(), 1):
+        for m in EMOJI_RE.finditer(line):
+            if ARROW_RE.match(m.group()):
+                continue
+            if not emoji_prefix_ok(line[:m.start()]):
+                bad.append((i, line.strip()[:70]))
+                break
+    return bad
+
+
+def count_emoji(text):
+    n = 0
+    for line in text.splitlines():
+        for m in EMOJI_RE.finditer(line):
+            if not ARROW_RE.match(m.group()):
+                n += 1
+    return n
+
+
+def seg_style(root, rep):
+    """文案规范：emoji 只在行首 + 密度下限（2026-09-22 用户口径）。"""
+    rep.section('8. 文案规范（emoji 行首 + 密度）')
+    targets = [('README.md', 20), ('DetailsReadme/DetailsReadme.md', 40)]
+    for rel, floor in targets:
+        p = root / rel
+        if not p.is_file():
+            rep.judge(False, 'style', f'{rel} 缺失', '')
+            continue
+        text = p.read_text(encoding='utf-8')
+        bad = find_stray_emoji(text)
+        n_emoji = count_emoji(text)
+        rep.judge(not bad, 'style',
+                  f'{rel}: emoji 全部位于行首结构位（{n_emoji} 个）'
+                  if not bad else
+                  f'{rel}: {len(bad)} 行 emoji 落在句中',
+                  '\n'.join(f'第 {i} 行: {t}' for i, t in bad[:5]))
+        rep.judge(n_emoji >= floor, 'style',
+                  f'{rel}: emoji 密度 {n_emoji} >= {floor}'
+                  if n_emoji >= floor else
+                  f'{rel}: emoji 密度 {n_emoji} < {floor}（显得光秃）',
+                  '密度下限防止下次又被"克制"回去')
+
+
+def _autocrlf(root):
+    """读本仓生效的 core.autocrlf（只用于行尾段的读数说明，缺失即 'unset'）。"""
+    try:
+        proc = subprocess.run(['git', 'config', '--get', 'core.autocrlf'],
+                              cwd=str(root), capture_output=True, text=True,
+                              encoding='utf-8', errors='replace')
+        return (proc.stdout or '').strip() or 'unset'
+    except Exception:
+        return 'unavailable'
+
+
+def seg_lineendings(root, rep):
+    """第 9 段：行尾符与 BOM —— 报告事实，并守住「不得引入 BOM」这条硬线。
+
+    ⚠️ 本段的定位是**事实播报 + 有限判负**，不是全面合规检查。原因：
+    本仓当前行尾是**不统一**的 —— mihomo / Surge 四份产物是 CRLF，
+    sing-box 两份 JSON 与全部手写文件是 LF（根因：产物由 convert_ruleset.py
+    在 Windows 上写出，仓库又缺 .gitattributes，core.autocrlf=true 把 \n 转成了
+    CRLF；手写文件当初以 LF 提交）。这是既存状态，**对功能无影响**
+    （各客户端按行解析并 trim 行尾），故不在此判负 —— 否则 CI 一上线就是红的。
+
+    真正判负的只有两条明确有害的情形：
+      ① 引入 BOM：BOM 会让部分解析器把首行 `# auto-converted…` 读成带 U+FEFF
+         的键，属静默故障面；
+      ② 同一「族」内行尾分裂（如 mihomo 与 surge 产物行尾不同）—— 那会让
+         跨格式逐行比对失真。
+    """
+    rep.section('9. 行尾符与 BOM')
+    targets = [n for fam in PRODUCTS.values() for n in fam.values()]
+
+    # ① BOM：硬判负
+    bom = []
+    for name in targets:
+        raw = (root / name).read_bytes()
+        if raw.startswith(b'\xef\xbb\xbf'):
+            bom.append(name)
+    rep.judge(not bom, 'eol',
+              f'六份产物均无 BOM'
+              if not bom else f'{len(bom)} 份产物带 BOM（首行会混入 U+FEFF）',
+              'BOM 属静默故障面：解析器可能把首行注释读成带不可见字符的键')
+
+    # ② 同族内行尾一致性 + 事实播报
+    eol = {}
+    for fam, files in PRODUCTS.items():
+        fam_kinds = {}
+        for kind, name in files.items():
+            raw = (root / name).read_bytes()
+            nl = raw.count(b'\r\n')
+            fam_kinds[kind] = 'CRLF' if nl and nl == raw.count(b'\n') else (
+                'LF' if not nl else '混合')
+        eol[fam] = fam_kinds
+        same = len(set(fam_kinds.values())) == 1
+        rep.judge(same, 'eol',
+                  f'{fam}: 三格式行尾一致（{list(set(fam_kinds.values()))[0]}）'
+                  if same else
+                  f'{fam}: 三格式行尾不一致（{fam_kinds}）',
+                  '同族内行尾分裂会让跨格式逐行比对失真')
+    # 事实播报（不判负）：让 CI 日志里可见，便于日后统一
+    # ⚠️ 本段读的是**工作区**字节，故读数依赖本地 git 配置：Windows 上
+    #    core.autocrlf=true（本机即是）会把 LF 检出成 CRLF，CI（Linux）则是 LF。
+    #    要判断「仓库内实际存的是什么」，须用 `git cat-file -p HEAD:<file>`
+    #    直读 blob，绕过工作区转换 —— 两者的差异本身就是 autocrlf 的证据。
+    rep.judge(True, 'eol',
+              '行尾现状（工作区口径，非判负）：'
+              + '；'.join(f'{k}={v}' for k, v in
+                          [(f, '/'.join(sorted(set(d.values())))) for f, d in eol.items()])
+              + '｜仓库内真实行尾以 git blob 为准（本机 core.autocrlf='
+              + str(_autocrlf(root)) + '）',
+              '')
+
+
+# ---------------------------------------------------------------- main
+
+def collect_counts(root):
+    counts = {}
+    for fam, files in PRODUCTS.items():
+        counts[fam] = {
+            'mihomo': len(parse_mihomo(root / files['mihomo'])),
+            'surge': len(parse_surge(root / files['surge'])),
+            'singbox': len(parse_singbox(root / files['singbox'])),
+        }
+    return counts
+
+
+def run(root):
+    rep = Report()
+    rep.section('0. 前置检查')
+    missing = [n for fam in PRODUCTS.values() for n in fam.values()
+               if not (root / n).is_file()]
+    if missing:
+        print(f'❌ 前置不达标：缺 {len(missing)} 份产物 → {missing[:4]}')
+        print('   本脚本必须在 Jinx 仓根执行；产物缺失时判据无意义。')
+        return EXIT_ENV
+    rep.judge(True, 'env', f'仓根定位正确（{root}），六份产物齐备')
+
+    counts = collect_counts(root)
+    seg_products_exist(root, rep)
+    seg_counts_consistent(root, rep, counts)
+    seg_cross_format(root, rep)
+    seg_header_selfcount(root, rep, counts)
+    seg_doc_counts(root, rep, counts)
+    repro = seg_reproducible(root, rep)
+    seg_source_headers(root, rep, counts)
+    seg_style(root, rep)
+    seg_lineendings(root, rep)
+
+    print(rep.render())
+    print()
+    total = len([r for r in rep.rows if r[0] is not None])
+    failed = len(rep.failed)
+    print(f'{"─" * 62}')
+    if failed:
+        print(f'TOTAL: {total - failed} passed, {failed} failed')
+        return EXIT_FAIL
+    if repro == 'skip':
+        # SKIP 必须走独立退出码 3，不能借 0 蒙混过关 —— 「未验证 ≠ 绿」。
+        # 姊妹仓 0930 事故：SKIP 曾复用 2，与「环境不达标」同码双义，
+        # 导致汇总脚本把环境故障吞成 SKIP → exit 0 假绿。此处按四态协议分离。
+        print('⚠️  第 6 段「产物可复现」已 SKIP（缺 jinx-rules/ 源文件）')
+        print('   未验证 ≠ 绿。补测：按 SKILL.md「完整生成」节取上游源文件到')
+        print('   jinx-rules/ 后重跑本脚本。CI 会先下载源文件再跑（见 ci.yml）。')
+        print(f'TOTAL: {total - failed} passed, 0 failed, 1 SKIPPED（exit 3）')
+        return EXIT_SKIP
+    print(f'TOTAL: {total - failed} passed, {failed} failed')
+    return EXIT_PASS
+
+
+def main():
+    ap = argparse.ArgumentParser(description='Jinx 规则集一致性断言')
+    ap.add_argument('--root', default=None, help='仓根（默认：本脚本上溯两级）')
+    args = ap.parse_args()
+    if args.root:
+        root = Path(args.root).resolve()
+    else:
+        root = Path(__file__).resolve().parents[2]
+    if not (root / 'README.md').is_file():
+        print(f'❌ 前置不达标：{root} 下没有 README.md，不像 Jinx 仓根')
+        return EXIT_ENV
+    return run(root)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

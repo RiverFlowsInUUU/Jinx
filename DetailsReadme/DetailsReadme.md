@@ -12,6 +12,7 @@
 - [🚧 6 · OpenClash：绕过中国大陆 IP](#-6-openclash绕过中国大陆-ip)
 - [📁 7 · 文件结构](#-7-文件结构)
 - [📚 8 · 来源与许可](#-8-来源与许可)
+- [✅ 9 · 一致性保证与验收](#-9-一致性保证与验收)
 
 ---
 
@@ -20,7 +21,7 @@
 | 客户端 | 文件 | 格式 | 条数 | 用途 |
 |:-------|:-----|:-----|-----:|:-----|
 | mihomo / OpenClash | `mihomo-ads.yaml` | `classical` | 3889 | 黑名单 · 拦截 |
-| mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 43 | 白名单 · 放行 |
+| mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 44 | 白名单 · 放行 |
 | Surge | `surge-ads.list` | `RULE-SET` | 3889 | 黑名单 · 拦截 |
 | Surge | `surge-white-guard.list` | `RULE-SET` | 44 | 白名单 · 放行 |
 | sing-box | `sing-box-ads.json` | `source` | 3889 | 黑名单 · 拦截 |
@@ -136,11 +137,42 @@ Jinx/
 ├── 🔶 surge-*.list     # 2 份，与 mihomo 一一对应
 ├── 🔵 sing-box-*.json  # 2 份，与 mihomo 一一对应（rule-set source 格式）
 ├── 📝 custom-*.list    # 2 份人工维护源（--extra / --extra-white）
-├── 🧪 skill/           # 转换脚本 + 方法论
+├── 🧪 skill/           # 转换脚本 + 方法论 + 验收闸门
+│   ├── 📄 scripts/     # convert_ruleset.py —— 六份产物的唯一生成入口
+│   └── ✅ tests/       # verify_jinx_src.py（9 段断言）· selftest_negative.py（负样本）
+├── 🔁 .github/         # CI：每次提交自动跑上述两个脚本
 └── 📁 DetailsReadme/   # 本文档
 ```
 
 📌 `mihomo-*.yaml` 是顶层 `payload` 列表，`surge-*.list` 是 RULE-SET 文本，`sing-box-*.json` 是 rule-set source 格式，**内容不可互换**。`custom-*.list` 是唯一需要手工编辑的文件；生成产物重跑一次即被覆盖。
+
+---
+
+## ✅ 9 一致性保证与验收
+
+🧱 本仓对外只承诺一件事：**六份文件内容等价、规则一条不增不减**。它由 `.github/workflows/ci.yml` 在每次 push / PR 自动校验，闸门是 [`skill/tests/verify_jinx_src.py`](../skill/tests/verify_jinx_src.py)（9 段 · 50 项断言）：
+
+| 段 | 守什么 |
+|:-:|:-------|
+| 1 | 六份产物存在且非空 |
+| 2 | 三格式条数一致（ads 三份互等 / white-guard 三份互等） |
+| 3 | **跨格式逐条语义等价** —— 归一化后比对，不是只比条数 |
+| 4 | 文件头 `# entries` 自述 == 实际条数 |
+| 5 | README / DetailsReadme 的条数声明 == 文件实际 |
+| 6 | **产物 == 源头重跑的结果**（防手改产物、防改了源头忘了重跑） |
+| 7 | `custom-*.list` 的表头声明与实际条数一致，且每条都真的落进产物 |
+| 8 | 文案规范：emoji 只在行首结构位 + 密度下限 |
+| 9 | 行尾符与 BOM |
+
+🔢 退出码沿用姊妹仓的四态协议：`0` 过 / `1` 判负 / `2` 环境不达标 / `3` SKIP。**SKIP 用独立码 3，不借 0 蒙混** —— 姊妹仓记录过一次事故：SKIP 与「环境不达标」并成同码，导致汇总脚本把环境故障吞成 SKIP、以 exit 0 假绿。
+
+🧷 第 6 段需要上游源文件（`jinx-rules/`），CI 会先下载再跑，故 CI 上该段**真正执行**；本地裸跑显示 SKIP 属正常。
+
+⚠️ 闸门自身也可能退化。`selftest_negative.py` 专治这个：它在临时副本仓里制造 6 种典型错误（手改产物 / 只改表头 / 跨格式差异 / 文档漂移 / 源头改了没重跑 / emoji 违规），要求闸门**逐一判负**，有漏报即判负。一个只会全绿的闸门与没有闸门等价 —— 这是本仓踩过的「永远绿的空操作」教训。
+
+📐 编写期该自测当场抓出两个真 bug，留痕备查：① 第 6 段比对时 `--src` 写法差异（ads 线用 `jinx-rules`、white-guard 线用 `./jinx-rules`，**因为它原样进表头**）会被误报成内容差异；② emoji 判定把 `U+2B00-2BFF` 整段当箭头排除，而 `U+2B50`（五角星形符号）正住在那段里 —— 导致句中 emoji 静默漏报。
+
+📏 **已知不统一（不影响功能，未纳入本次改动）**：mihomo / Surge 四份产物在仓库内存的是 CRLF，sing-box 两份 JSON 与全部手写文件是 LF。根因是产物由脚本在 Windows 上写出、仓库又缺 `.gitattributes`。各客户端按行解析并 trim 行尾，故无功能影响；第 9 段只做同族一致性与事实播报，不判负。要彻底统一需加 `.gitattributes` + 重跑生成，属独立改动。
 
 ---
 

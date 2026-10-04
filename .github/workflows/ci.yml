@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 取上游源文件（第 6 段「产物可复现」的输入）
+        # ⚠️ 这一步不能省。verify_jinx_src.py 第 6 段要拿上游源文件重跑生成，
+        #    再与仓库里的产物逐字节比对 —— 源文件缺失时该段判 SKIP（退出码 3）。
+        #    若此处静默失败，CI 会长期以「SKIP」形态存在，即 SKILL.md 记录过的
+        #    「两半都恒空 = 永远绿的空操作」。故：下载失败即整步失败（curl -f）。
+        #    上游版本以详情文档记录的快照为准（当前 3.1.9 / 2026-09-15）；
+        #    上游向前滚动时，第 6 段会判负并提示重跑生成 —— 这正是它该做的事。
+        run: |
+          mkdir -p jinx-rules && cd jinx-rules
+          for f in blacklist.txt blacklist_wildcard.txt whitelist.txt whitelist_wildcard.txt version.json; do
+            curl -fsSLO "https://raw.githubusercontent.com/VME98/jinx-rules/master/rules/$f"
+          done
+          echo "--- 上游版本 ---"
+          cat version.json
+
+      - name: 一致性断言（8 段 · 三格式等价 / 条数声明 / 产物可复现 / 文案规范）
+        # 退出码：0=过 / 1=判负 / 2=环境不达标 / 3=SKIP（缺源文件）。
+        # CI 里 2 与 3 一律视为失败（保守）—— 未验证 ≠ 绿。
+        run: |
+          set +e
+          python skill/tests/verify_jinx_src.py
+          code=$?
+          set -e
+          echo "verify_jinx_src.py exit=$code"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::一致性断言未通过（exit $code）—— 2/3 视为失败：判据没有真正跑起来"
+            exit 1
+          fi
+
+      - name: 负样本自测（证明闸门本身能抓错，防空转）
+        # 一个只会全绿的闸门等于没有闸门。这一步在临时副本仓里制造 6 种典型
+        # 错误（手改产物 / 只改表头 / 跨格式差异 / 文档漂移 / 源头改了没重跑 /
+        # 文案违规），逐一要求断言脚本判负 —— 全部抓到才算过。
+        run: python skill/tests/selftest_negative.py
