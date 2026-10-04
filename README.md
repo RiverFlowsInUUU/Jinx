@@ -37,17 +37,14 @@
 
 ## 📥 订阅
 
-📦 按客户端各取两份：**拦截**在前、**放行**在后。地址就在表内文件名上 —— **右键「复制链接地址」**即可，不必再翻找。
-
-✨ **Egern 不需要另找文件** —— 它与 Surge 同格式，直接复用那两份 `.list`。
-
 ### 🧱 Jinx 规则集
+
+🔗 文件名即订阅地址 —— 右键「复制链接地址」即可取用。
 
 | <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">🛡️ 放行规则集</div> |
 |:--|:--|:--|
 | **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-white-guard.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml) `44` |
-| **Surge** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-white-guard.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44` |
-| **Egern** | 同上 · 直接复用 ↑ | 同上 · 直接复用 ↑ |
+| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-white-guard.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44` |
 | **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-white-guard.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json) `44` |
 
 📌 表内链接指向 **Raw GitHub**（首选源）。要换成 jsDelivr 备用源，把

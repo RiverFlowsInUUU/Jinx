@@ -22,13 +22,12 @@
 |:-------|:-----|:-----|-----:|:-----|
 | mihomo / OpenClash | `mihomo-ads.yaml` | `classical` | 3889 | 黑名单 · 拦截 |
 | mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 44 | 白名单 · 放行 |
-| Surge | `surge-ads.list` | `RULE-SET` | 3889 | 黑名单 · 拦截 |
-| Surge | `surge-white-guard.list` | `RULE-SET` | 44 | 白名单 · 放行 |
-| Egern | `surge-ads.list` · `surge-white-guard.list` | `rule_set` | 3889 / 44 | 黑名单 / 白名单 · **直接复用** |
+| Surge / Egern | `surge-ads.list` | `RULE-SET` / `rule_set` | 3889 | 黑名单 · 拦截 |
+| Surge / Egern | `surge-white-guard.list` | `RULE-SET` / `rule_set` | 44 | 白名单 · 放行 |
 | sing-box | `sing-box-ads.json` | `source` | 3889 | 黑名单 · 拦截 |
 | sing-box | `sing-box-white-guard.json` | `source` | 44 | 白名单 · 放行 |
 
-🔵 **Egern 无独立产物**：它的规则集格式与 Surge 同源（`DOMAIN-SUFFIX` / `DOMAIN-WILDCARD` 逐字相同），直接引用 `surge-*.list` 即可 —— 引用位置有两处：`rules` 段的 `rule_set`（连接阶段）与 `forward` 段的 `proxy_rule_set`（DNS 阶段）。依据：姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) 的四份现役 Egern profile 全部这样引用，并把这两份登记为「共用规则集」。
+🔵 **Egern 复用 Surge 那份文件**：两者规则集格式同源（`DOMAIN-SUFFIX` / `DOMAIN-WILDCARD` 逐字相同），无需独立产物。引用位置有两处：`rules` 段的 `rule_set`（连接阶段）、`forward` 段的 `proxy_rule_set`（DNS 阶段）。依据：姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) 四份现役 Egern profile 均如此引用，并将这两份登记为「共用规则集」。
 
 🧩 **白名单怎么来的**：上游白名单（325 条）中会被黑名单命中的 **42 条**，加 **2 条**手工补充（`*.tange365.com`，「小鲸看看」相机 App 的账户 / 设备 / 云存储域；`*.wechatos.net`，用户指定放行），共 44 条。
 
