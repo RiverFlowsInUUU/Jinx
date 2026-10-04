@@ -305,21 +305,41 @@ def seg_doc_counts(root, rep, counts):
     details = root / 'DetailsReadme' / 'DetailsReadme.md'
 
     # 5-a: README 订阅表里每份文件的条数单元格
+    #
+    # 表格有两种合法呈现形态（2026-10-04 起以形态 B 为主）：
+    #   A 独立单元格：  | \`file.yaml\` | 3889 | 拦截 |
+    #   B 内嵌链接：    | ... | [\`file.yaml\`](RAW_URL) \`3889\` | ... |
+    #     形态 B 是向姊妹仓看齐的做法 —— 文件名本身就是指向 raw 地址的链接，
+    #     读者右键「复制链接地址」即得订阅 URL，不必回头对照下方的地址块。
+    # 判据不变：**文件名必须出现，且紧随其后的条数必须等于产物实际**。
     if readme.is_file():
         text = readme.read_text(encoding='utf-8')
+
+        def readme_count_of(name):
+            """返回 (匹配到的条数字符串, 形态) 或 (None, None)。"""
+            nm = re.escape(name)
+            # 形态 B：链接文本 + 紧随的条数
+            m = re.search(r'\[`' + nm + r'`\]\([^)]+\)\s*`?(\d+)`?', text)
+            if m:
+                return m.group(1), 'B'
+            # 形态 A：独立单元格
+            m = re.search(r'\|\s*`' + nm + r'`\s*\|\s*(\d+)\s*\|', text)
+            if m:
+                return m.group(1), 'A'
+            return None, None
+
         for fam, files in PRODUCTS.items():
             for kind, name in files.items():
                 real = counts[fam][kind]
-                pat = re.compile(r'\|\s*`' + re.escape(name) + r'`\s*\|\s*(\d+)\s*\|')
-                m = pat.search(text)
-                if not m:
+                got, shape = readme_count_of(name)
+                if got is None:
                     rep.judge(False, 'doc', f'README: 订阅表缺 {name} 行',
                               '订阅表是使用者的选文件依据，六份文件都要列出')
                     continue
-                rep.judge(int(m.group(1)) == real, 'doc',
-                          f'README 表 {name}: {m.group(1)} == {real}'
-                          if int(m.group(1)) == real else
-                          f'README 表 {name}: 声明 {m.group(1)} != 实际 {real}',
+                rep.judge(int(got) == real, 'doc',
+                          f'README 表 {name}: {got} == {real}（形态{shape}）'
+                          if int(got) == real else
+                          f'README 表 {name}: 声明 {got} != 实际 {real}',
                           '改了产物必须同步改文档条数')
 
         # 5-b: README 数据徽章（放行 = white-guard 条数，拦截 = ads 条数）
@@ -341,8 +361,9 @@ def seg_doc_counts(root, rep, counts):
         for fam, files in PRODUCTS.items():
             for kind, name in files.items():
                 real = counts[fam][kind]
-                pat = re.compile(r'\|\s*`' + re.escape(name) + r'`\s*\|[^|]*\|\s*(\d+)\s*\|')
-                m = pat.search(dtext)
+                nm = re.escape(name)
+                m = (re.search(r'\[`' + nm + r'`\]\([^)]+\)\s*`?(\d+)`?', dtext)
+                     or re.search(r'\|\s*`' + nm + r'`\s*\|[^|]*\|\s*(\d+)\s*\|', dtext))
                 if m:
                     rep.judge(int(m.group(1)) == real, 'doc',
                               f'Details 表 {name}: {m.group(1)} == {real}'
@@ -491,14 +512,39 @@ ARROW_RE = re.compile('[' + re.escape(''.join(sorted(ARROW_CHARS))) + ']')
 STRUCT_OK = re.compile(
     r'^[\s>#\-*+|\[\]`\\/()（）0-9.\u2500-\u257F]*$')
 
+# HTML 标签（含属性）：`<div align="center">` / `<summary>` / `</b>` / `<br>`
+HTML_TAG_RE = re.compile(r'</?[a-zA-Z][a-zA-Z0-9]*(?:\s[^<>]*)?/?>')
+
 
 def emoji_prefix_ok(prefix):
-    """判断 emoji 之前的前缀是否属「结构位」。"""
-    if STRUCT_OK.match(prefix):
-        return True
-    # HTML 标签（<summary> / <b> / <div …>）剥掉后再判 —— 标签属版式结构
-    stripped = re.sub(r'</?[a-zA-Z][^>]*>', '', prefix)
-    return bool(STRUCT_OK.match(stripped))
+    """判断 emoji 之前的前缀是否属「结构位」。
+
+    判定分两种版式语境，**表格必须单独处理**：
+
+    ① 非表格行：剥掉全部 HTML 标签（标签属版式结构，其中的 align / center
+       等属性文字不是正文），余下部分须**只由结构符号构成**。
+    ② 表格行：只取**本单元格内**的内容来判 —— 即最后一个未闭合的 `|` 之后
+       的部分。因为 `| 客户端 | 🚫 拦截 |` 里，"客户端"是**上一个单元格**的
+       内容，与 🚫 无关；不切开就会把完全合规的「单元格起始」误报成句中。
+
+    ⚠️ 踩坑史（同一类误报发生过两次，故此处写清）：
+      - 2026-10-04 首例：`<summary>🔷 <b>mihomo</b></summary>` —— 未剥标签。
+      - 2026-10-04 次例：`| <div align="center">🚫 拦截</div> |` —— 剥了标签
+        但跨单元格判定，把上一格的"客户端"当成了本格正文。
+    """
+    # ② 表格行：截到本单元格开头
+    if prefix.lstrip().startswith('|') or '|' in prefix:
+        cell = prefix.rsplit('|', 1)[-1]
+    else:
+        cell = prefix
+
+    for candidate in (prefix, cell):
+        if STRUCT_OK.match(candidate):
+            return True
+        stripped = HTML_TAG_RE.sub('', candidate)
+        if STRUCT_OK.match(stripped):
+            return True
+    return False
 
 
 def find_stray_emoji(text):

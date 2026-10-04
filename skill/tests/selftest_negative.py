@@ -79,9 +79,29 @@ def _(w):
 
 @case('文档漂移：README 订阅表条数写错', '文档条数声明')
 def _(w):
+    """把订阅表里某个文件的条数改错。
+
+    兼容两种合法表格形态（见 verify_jinx_src.py 第 5 段）：
+      A 独立单元格： | `f` | 44 |
+      B 内嵌链接：   [`f`](URL) `44`
+    两种都试，确保本负样本在版式演进后依然有效。
+    实测教训（2026-10-04）：只匹配形态 A 时，README 改成形态 B 后本负样本
+    静默失效（改不动文件 → 断言自然不报错 → 被误读成「漏报」）。
+    """
     p = w / 'README.md'
     t = p.read_text(encoding='utf-8')
-    t = t.replace('| `surge-white-guard.list` | 44 |', '| `surge-white-guard.list` | 50 |')
+    for old, new in [
+        ('[`surge-white-guard.list`](https://raw.githubusercontent.com/'
+         'RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44`',
+         '[`surge-white-guard.list`](https://raw.githubusercontent.com/'
+         'RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `50`'),
+        ('| `surge-white-guard.list` | 44 |', '| `surge-white-guard.list` | 50 |'),
+    ]:
+        if old in t:
+            t = t.replace(old, new)
+            break
+    else:
+        raise AssertionError('负样本失效：README 订阅表两种形态都没匹配到')
     p.write_text(t, encoding='utf-8')
 
 
@@ -94,11 +114,30 @@ def _(w):
 
 @case('文案违规：emoji 落在句中', '文案规范')
 def _(w):
+    """在正文句子中间塞一个 emoji。
+
+    用 ⭐（U+2B50）—— 它与箭头（→ U+2192、⬅ U+2B05）同处一位区段，
+    专门守「把整段当箭头排除」这类漏报（2026-10-04 真实踩过）。
+
+    ⚠️ 锚点必须选**当前 README 里真实存在**的行。实测教训：本负样本原锚在
+    `⭐ **Raw GitHub** · 首选` 上，该行随裸 URL 块一起被删除后，负样本静默
+    失效（`replace` 无命中 → 文件没被改 → 断言不报错 → 被误读成「漏报」）。
+    故此处改为**动态选择**：取第一个非空、非标题、不含 emoji 的正文行来注入。
+    """
     p = w / 'README.md'
-    t = p.read_text(encoding='utf-8')
-    # ⭐ 是 U+2B50 —— 与箭头（U+2192 / U+2B05）同段，专门用来防「整段排除」的漏报
-    t = t.replace('⭐ **Raw GitHub** · 首选', '上面用的是 ⭐ 首选 Raw')
-    p.write_text(t, encoding='utf-8')
+    lines = p.read_text(encoding='utf-8').split('\n')
+    for i, l in enumerate(lines):
+        s = l.strip()
+        if not s or s.startswith(('#', '|', '>', '```', '<', '- ', '*')):
+            continue
+        if v := __import__('re').search(
+                '[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U00002B00-\U00002BFF]', s):
+            continue
+        lines[i] = '上面用的是 ⭐ 首选 Raw，' + s
+        break
+    else:
+        raise AssertionError('负样本失效：README 里找不到可注入的正文行')
+    p.write_text('\n'.join(lines), encoding='utf-8')
 
 
 def main():

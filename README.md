@@ -36,58 +36,28 @@
 
 ## 📥 订阅
 
-📦 六份文件 × 两个源，内容完全一致，订阅任选其一。
+📦 按客户端各取两份：**拦截**在前、**放行**在后。地址就在表内文件名上 —— **右键「复制链接地址」**即可，不必再翻找。
 
 ### 🧱 Jinx 规则集
 
-| <div align="center">客户端</div> | <div align="center">文件</div> | <div align="center">条数</div> | <div align="center">用途</div> |
-|:-------|:-----|-----:|:-----|
-| mihomo / OpenClash | `mihomo-ads.yaml` | 3889 | 拦截 |
-| mihomo / OpenClash | `mihomo-white-guard.yaml` | 44 | 放行 |
-| Surge | `surge-ads.list` | 3889 | 拦截 |
-| Surge | `surge-white-guard.list` | 44 | 放行 |
-| sing-box | `sing-box-ads.json` | 3889 | 拦截 |
-| sing-box | `sing-box-white-guard.json` | 44 | 放行 |
+| <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">🛡️ 放行规则集</div> |
+|:--|:--|:--|
+| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-white-guard.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml) `44` |
+| **Surge** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-white-guard.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44` |
+| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-white-guard.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json) `44` |
 
-⭐ **Raw GitHub** · 首选
-
-```
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json
-https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json
-```
-
-🔁 **jsDelivr** · 备用
-
-```
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-ads.yaml
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/mihomo-white-guard.yaml
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-ads.list
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/surge-white-guard.list
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-ads.json
-https://cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/sing-box-white-guard.json
-```
-
-🔀 换备用源：把 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/`。
+📌 表内链接指向 **Raw GitHub**（首选源）。要换成 jsDelivr 备用源，把
+`raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/` 即可。
 
 ### 🤝 AWAvenue 秋风广告规则
 
 🍂 第三方规则，官方直链，可叠加；上游每日更新，条数以官方文件头为准。
 
-| <div align="center">客户端</div> | <div align="center">文件</div> | <div align="center">条数</div> | <div align="center">用途</div> |
-|:-------|:-----|-----:|:-----|
-| mihomo / OpenClash | `AWAvenue-Ads-Rule-Clash-Classical.yaml` | 965 | 拦截 |
-| Surge | `AWAvenue-Ads-Rule-Surge-RULE-SET.list` | 965 | 拦截 |
-| sing-box | `AWAvenue-Ads-Rule-Singbox.json` | 965 | 拦截 |
-
-```
-https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml
-https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list
-https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Singbox.json
-```
+| <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> |
+|:--|:--|
+| **mihomo** / OpenClash | [`AWAvenue-Ads-Rule-Clash-Classical.yaml`](https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Clash-Classical.yaml) `965` |
+| **Surge** | [`AWAvenue-Ads-Rule-Surge-RULE-SET.list`](https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Surge-RULE-SET.list) `965` |
+| **sing-box** | [`AWAvenue-Ads-Rule-Singbox.json`](https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/Filters/AWAvenue-Ads-Rule-Singbox.json) `965` |
 
 > [!WARNING]
 > 判定标准与 Jinx 不同 —— 会拦掉 Jinx 白名单里的 8 个域。叠加时把秋风排在 Jinx **之后**。
