@@ -140,6 +140,38 @@ def _(w):
     p.write_text('\n'.join(lines), encoding='utf-8')
 
 
+@case('平台清单缺一端：仓库简介漏 sing-box（第 10 段）', '平台清单齐备')
+def _(w):
+    """把建仓脚本里的简介默认值还原成漏 sing-box 的旧值。
+
+    这是**真实发生过的缺陷**：2026-09-28 加入 sing-box 后，README / 接入节 /
+    徽章都更新了，但仓库简介（GitHub 页面顶部、列表、搜索结果都显示它）漏了
+    整整一周无人发现 —— 因为它存在建仓脚本的 `--description` 默认值里，
+    平时没人会打开那个文件看。
+    """
+    p = w / 'skill' / 'scripts' / 'upload_to_github.py'
+    t = p.read_text(encoding='utf-8')
+    old = 'mihomo / Surge / sing-box'
+    assert old in t, '负样本失效：简介默认值里已无预期文本'
+    p.write_text(t.replace(old, 'mihomo / Surge', 1), encoding='utf-8')
+
+
+@case('平台清单缺一端：转换原理表头去掉 sing-box 列（第 10 段）', '平台清单齐备')
+def _(w):
+    """表格表头少一个平台列 —— 属「清单类位置」的平台缺失。
+
+    ⚠️ 本条守的是第 10 段的**判据强度**：早期实现只判「全文出现过平台名」，
+    这种删表格列的做法照样全绿（别处仍有 sing-box 字样）。现已锚定到
+    结构性位置（徽章行 / 订阅表行 / 折叠块标头 / 表头 / 简介默认值）。
+    """
+    p = w / 'DetailsReadme' / 'DetailsReadme.md'
+    t = p.read_text(encoding='utf-8')
+    old = '| 上游写法 | 含义 | mihomo | Surge | sing-box |'
+    assert old in t, '负样本失效：转换原理表头已改版'
+    p.write_text(t.replace(old, '| 上游写法 | 含义 | mihomo | Surge |', 1),
+                 encoding='utf-8')
+
+
 def main():
     if not TARGET.is_file():
         print(f'❌ 前置不达标：找不到 {TARGET}')

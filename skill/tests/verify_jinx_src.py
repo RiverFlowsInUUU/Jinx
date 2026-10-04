@@ -27,6 +27,8 @@
   7. 源头文件（custom-*.list）的表头 extra 声明与实际条数一致
   8. 文案规范：emoji 只出现在行首 + 密度下限
   9. 行尾符与 BOM（BOM 硬判负；行尾只做同族一致性与事实播报）
+ 10. 平台清单齐备 —— 面向外部的说明（仓库简介来源 / README / DetailsReadme / SKILL）
+     必须列全所有平台。实证：sing-box 曾从仓库简介里漏了一周无人发现。
 
 闸门自身可信度由 skill/tests/selftest_negative.py 保证：它在临时副本仓里
 制造 6 种典型错误，要求本脚本逐一判负 —— 防止闸门退化成「永远绿的空操作」。
@@ -670,6 +672,91 @@ def seg_lineendings(root, rep):
               '')
 
 
+# ---------------------------------------------------------------- 第 10 段
+
+# 平台识别：从**产物文件名**派生清单，不硬编码平台名 ——
+# 将来加第四端时本段自动跟上，不需要改断言（避免"断言比现实慢一拍"）。
+PLATFORM_LABEL = {
+    'mihomo': ['mihomo'],
+    'surge': ['Surge', 'surge'],
+    'singbox': ['sing-box'],
+}
+
+# 面向外部的「平台清单类位置」—— 这些是**结构性位置**（徽章行 / 表格行 /
+# 折叠块标头），漏一端就会让读者以为不支持该端。
+#
+# ⚠️ 判据必须锚定这类位置，**不能只判"全文出现过平台名"**：
+#    实测（2026-10-04）—— 初版判全文出现，把 README 徽章里的 sing-box 行删掉
+#    或 DetailsReadme 订阅表里删掉两行，断言**照样全绿**，因为别处（接入节、
+#    转换原理表）仍有 "sing-box" 字样。那样的判据等于没判。
+#
+# 每个条目 = (文件, 描述, 判定用的正则模板)。模板用 {name} 占位平台名，
+# 平台名按 PLATFORM_LABEL 取（任一别名命中即算该平台在场）。
+EXTERNAL_POSITIONS = [
+    ('README.md', '顶部平台徽章行',
+     r'^\[!\[[^\]]*\]\([^)]*img\.shields\.io[^)]*\)\]'),
+    ('README.md', '订阅表「Jinx 规则集」行',
+     r'^\|\s*\*\*[^|]*\*\*[^|]*\|[^\n]*$'),
+    ('README.md', '接入节折叠块标头',
+     r'<summary>[^\n]*</summary>'),
+    ('DetailsReadme/DetailsReadme.md', '订阅表行',
+     r'^\|\s*[^|]+\|\s*`[^`]+`\s*\|[^\n]*$'),
+    ('DetailsReadme/DetailsReadme.md', '转换原理表表头',
+     r'^\|\s*上游写法[^\n]*$'),
+    ('skill/scripts/upload_to_github.py', '仓库简介默认值（GitHub 页面顶部显示的就是它）',
+     r"'--description',\s*default="),
+]
+
+
+def seg_platform_coverage(root, rep):
+    """第 10 段：面向外部的说明，每个平台都必须在「清单类位置」露面。
+
+    动机（2026-10-04 实证）：09-28 给本仓加了 sing-box，README 订阅表 /
+    接入节 / 徽章都更新了，但**仓库简介漏了整整一周**无人发现 —— 因为简介存在
+    建仓脚本的 `--description` 默认值里，平时没人看，却出现在 GitHub 页面顶部、
+    仓库列表与搜索结果里。漏一端 = 使用者以为不支持该端。
+
+    做法：对每个「清单类位置」，取其**同一族的所有行**（如 README 全部徽章行、
+    接入节全部 summary、订阅表全部数据行），要求每个平台至少命中一行。
+    """
+    rep.section('10. 平台清单齐备（面向外部的说明）')
+
+    for rel, where, pat in EXTERNAL_POSITIONS:
+        p = root / rel
+        if not p.is_file():
+            rep.judge(False, 'plat', f'{rel} 缺失（{where}）', '')
+            continue
+        text = p.read_text(encoding='utf-8', errors='replace')
+        # 用 search 而非 match：这些正则描述的是**行内特征**（表格行首是 `|`、
+        # Python 实参前有缩进），强行锚行首会让「有缩进就定位不到」。
+        # ⚠️ 实测踩坑：`--description` 那行前有 4 空格，用 match 恒不命中，
+        #    触发了下面「定位不到」的保护 —— 保护本身是对的（它拒绝静默通过），
+        #    但根因是这里选错了匹配方式。
+        lines = [l for l in text.splitlines() if re.search(pat, l)]
+
+        # 该位置必须**确实存在**（避免正则写飞了导致空集恒绿）
+        if not lines:
+            rep.judge(False, 'plat', f'{rel}: 定位不到「{where}」',
+                      '正则未命中任何行 —— 版式可能已变，需同步更新本段的正则')
+            continue
+
+        missing = [plat for plat, names in PLATFORM_LABEL.items()
+                   if not any(any(n in l for n in names) for l in lines)]
+        rep.judge(not missing, 'plat',
+                  f'{rel}「{where}」：平台列全（{len(lines)} 行）'
+                  if not missing else
+                  f'{rel}「{where}」：缺 {", ".join(missing)}',
+                  '漏一端会让使用者以为不支持该端；'
+                  '实证：sing-box 曾从仓库简介里漏了一周')
+
+    # 仓库简介是唯一「不在仓库里」的对外说明 —— 本仓只能校验脚本里的默认值
+    rep.judge(True, 'plat',
+              '提示：本段校验的是 `upload_to_github.py` 的**默认值**；'
+              '已建仓库的**线上简介**须另行核对 `gh repo view --json description`，'
+              '不一致时用 `gh repo edit --description` 覆盖（线上值不在本仓，'
+              '断言无法直接校验）')
+
+
 # ---------------------------------------------------------------- main
 
 def collect_counts(root):
@@ -704,6 +791,7 @@ def run(root):
     seg_source_headers(root, rep, counts)
     seg_style(root, rep)
     seg_lineendings(root, rep)
+    seg_platform_coverage(root, rep)
 
     print(rep.render())
     print()

@@ -100,7 +100,7 @@
 | `p*-ad.adkwai.com` | 中缀通配（单级） | `DOMAIN-REGEX` | `DOMAIN-WILDCARD` | `domain_regex` |
 | 上游白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` | `domain` |
 
-- 🎯 mihomo / Surge 唯一差异是 **149 条中缀通配** —— mihomo 不支持星号内嵌，改用 `DOMAIN-REGEX`。sing-box 一并落在 `domain_regex`（同为 Go RE2 正则，转换式三平台可复用）。
+- 🎯 **三端唯一差异在 149 条中缀通配的写法** —— Surge 用 `DOMAIN-WILDCARD`；mihomo 不支持星号内嵌，改写成 `DOMAIN-REGEX`；sing-box 落在 `domain_regex`（同为 Go RE2 正则，转换式与 mihomo 一致）。域名后缀与精确匹配两类，三端语义完全对齐。
 - 🌳 `DOMAIN-SUFFIX` / `domain_suffix` 覆盖整个子域树；误杀用白名单放行。
 - 🧱 仅域名级拦截，同域内嵌广告需 MITM / URL 级规则。
 - ⏭️ 上游 `url_*` / `mitm_skip_domains` 依赖 MITM 上下文，未转换。

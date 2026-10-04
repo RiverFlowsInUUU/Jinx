@@ -129,7 +129,7 @@ def singbox_json(sb_suffix, sb_domain, sb_regex):
     """把 sing-box 条目包装成 rule-set source 格式(version 5)。
 
     单条 rules 项内域名族字段互为 OR —— 三类条目并排放同一项,
-    任一命中即命中, 与 mihomo/Surge 逐条规则的语义一致。
+    任一命中即命中, 与 mihomo / Surge 逐条规则的语义一致(三端同源)。
     空字段整体省略(空数组会被 strict 解析拒绝)。
     """
     rule = {}
