@@ -4,6 +4,25 @@
 
 ---
 
+## 2026-10-04（四）· 改名：`*-white-guard.*` → `*-direct.*`
+
+> 📌 本日第四条。**规则内容零改动** —— 三份产物逐字节比对，与新名前完全一致。
+
+**变更**
+
+- 🏷️ **白名单产物改名：`mihomo-white-guard.yaml` → `mihomo-direct.yaml`、`surge-white-guard.list` → `surge-direct.list`、`sing-box-white-guard.json` → `sing-box-direct.json`。** 与源头 `custom-direct.list` 及「白名单 = 直连」的语义对齐 —— 历史名 `white-guard` 是更早一次术语调整（「白名单守卫」→「白名单」）未收尾的遗留。
+  - ⚠️ **旧订阅地址失效**：三个旧名文件已删除，旧地址将 404。**已订阅旧地址的需改用新地址。** —— 这是本次改动的已知代价，经确认后执行。
+  - 🔧 示例里的 **provider / tag 名**一并由 `jinx-white-guard` 改为 `jinx-direct`（文件名与标识符对齐）。
+  - ✅ **内容零改动**：新旧产物**逐字节相同**（1599 / 1326 / 1459 字节，三份全等）—— 纯改名。
+  - 📐 产物名由 `convert_ruleset.py --tag <名>` 决定，故**改的是生成参数**（`--tag white-guard` → `--tag direct`）而非手改文件名，`verify_jinx_src.py` 的 `REGEN` / `PRODUCTS` 表随之同步 —— 保证「产物 == 源头重跑结果」这条断言仍然成立。
+  - 📝 全仓共 52 处引用随之更新（生成参数 / README / DetailsReadme / SKILL / 断言 / 负样本 / `custom-direct.list` 表头）；**CHANGELOG 的 6 处旧名保留不动** —— 那里记的是"当时叫什么"，改了等于篡改历史。
+
+**纪律入册**
+
+- `skill/SKILL.md`「对外交付」新增一条：**改一个产物的文件名 = 一次改全套，且属破坏性改动**（订阅地址变更）。含代价先想清楚（旧地址 404；无法确认引用方已迁移时宁可保留旧文件标注废弃）、先改 `--tag` 而非 `git mv`、改完必做逐字节比对、五层必查清单、CHANGELOG 一律不改。
+
+---
+
 ## 2026-10-04（三）· 修复：行尾跨平台不一致（CI 首跑即抓出）
 
 > 📌 本日第三条。**规则内容零改动** —— 六份产物只有行尾变化（CRLF → LF），逐字节归一化比对已证「仅行尾不同、内容一致」。

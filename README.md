@@ -43,9 +43,9 @@
 
 | <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">✅ 放行规则集</div> |
 |:--|:--|:--|
-| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-white-guard.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml) `44` |
-| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-white-guard.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44` |
-| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-white-guard.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json) `44` |
+| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-direct.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml) `44` |
+| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-direct.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list) `44` |
+| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-direct.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-direct.json) `44` |
 
 📌 表内链接指向 **Raw GitHub**（首选源）。要换成 jsDelivr 备用源，把
 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/` 即可。
@@ -101,16 +101,16 @@ rule-providers:
     path: ./rule_provider/jinx-ads.yaml
     interval: 86400
 
-  jinx-white-guard:
+  jinx-direct:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml"
-    path: ./rule_provider/jinx-white-guard.yaml
+    url: "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml"
+    path: ./rule_provider/jinx-direct.yaml
     interval: 86400
 
 rules:
-  - RULE-SET,jinx-white-guard,DIRECT
+  - RULE-SET,jinx-direct,DIRECT
   - RULE-SET,jinx-ads,REJECT
   # 其余规则接在后面
 ```
@@ -127,7 +127,7 @@ rules:
 ```
 [Rule]
 # 白名单（精确放行）
-RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list,DIRECT
+RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list,DIRECT
 # 广告拦截
 RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list,REJECT,pre-matching,extended-matching
 # 其余规则接在后面
@@ -140,14 +140,14 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 <details>
 <summary>🟣 <b>Egern</b> · 直接复用 Surge 那份 <code>.list</code></summary>
 
-✨ **不用另找文件** —— Egern 的规则集格式与 Surge 同源，`surge-white-guard.list` 与 `surge-ads.list` 原样可用。
+✨ **不用另找文件** —— Egern 的规则集格式与 Surge 同源，`surge-direct.list` 与 `surge-ads.list` 原样可用。
 
 ```yaml
 # ① 连接阶段：走规则匹配（白名单在前、拦截在后）
 rules:
 - rule_set:
     name: Jinx-CN
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list
     policy: DIRECT
     update_interval: 604800
 - rule_set:
@@ -162,7 +162,7 @@ rules:
 # ② DNS 阶段：防泄露的一环（可选，但推荐 —— 广告域在解析阶段就拒答）
 forward:
 - proxy_rule_set:
-    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list
     value: Domestic-DNS
 - proxy_rule_set:
     match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
@@ -188,9 +188,9 @@ forward:
     "rule_set": [
       {
         "type": "remote",
-        "tag": "jinx-white-guard",
+        "tag": "jinx-direct",
         "format": "source",
-        "url": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json",
+        "url": "https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-direct.json",
         "update_interval": "1d"
       },
       {
@@ -202,7 +202,7 @@ forward:
       }
     ],
     "rules": [
-      { "rule_set": ["jinx-white-guard"], "outbound": "direct" },
+      { "rule_set": ["jinx-direct"], "outbound": "direct" },
       { "rule_set": ["jinx-ads"], "action": "reject" }
     ]
   }

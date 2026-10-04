@@ -19,7 +19,7 @@
 
 断言清单（9 段）:
   1. 六份产物存在且非空
-  2. 三格式条数一致（ads 三份互等 / white-guard 三份互等）
+  2. 三格式条数一致（ads 三份互等 / direct 三份互等）
   3. 跨格式语义等价（归一化后逐条比对，不是只比条数）
   4. 文件头 # entries 自述 == 实际条数
   5. 文档声明的条数 == 文件实际条数（README / DetailsReadme）
@@ -68,10 +68,13 @@ PRODUCTS = {
         'surge': 'surge-ads.list',
         'singbox': 'sing-box-ads.json',
     },
-    'white-guard': {
-        'mihomo': 'mihomo-white-guard.yaml',
-        'surge': 'surge-white-guard.list',
-        'singbox': 'sing-box-white-guard.json',
+    # 2026-10-04 由 `direct` 改名为 `direct`：与源头 `custom-direct.list`
+    # 及「白名单 = 直连」的语义对齐（历史名 `direct` 是「白名单守卫」的遗留）。
+    # ⚠️ 改名 = 订阅地址变更，旧地址 404（用户已确认接受）。
+    'direct': {
+        'mihomo': 'mihomo-direct.yaml',
+        'surge': 'surge-direct.list',
+        'singbox': 'sing-box-direct.json',
     },
 }
 
@@ -79,18 +82,18 @@ PRODUCTS = {
 #
 # ⚠️ `--src` 的写法会**原样进产物表头**（SKILL.md 第 107 行），必须与既有文件
 #    逐字一致，否则「可复现」一段会把表头差异误报成内容差异。实测踩坑：
-#    ads 线线上表头是 `# source: jinx-rules`（无 `./`），white-guard 线是
+#    ads 线线上表头是 `# source: jinx-rules`（无 `./`），direct 线是
 #    `# source: ./jinx-rules`（有 `./`）—— 两条命令的写法本就不同，不是笔误。
 REGEN = {
     'ads': ['--src', 'jinx-rules',
             '--fixed', 'blacklist.txt', '--wild', 'blacklist_wildcard.txt',
             '--tag', 'ads', '--mode', 'suffix', '--extra', 'custom-ads.list'],
-    'white-guard': ['--src', './jinx-rules',
-                    '--fixed', 'whitelist.txt', '--wild', 'whitelist_wildcard.txt',
-                    '--tag', 'white-guard', '--mode', 'exact',
-                    '--guard-against-fixed', 'blacklist.txt',
-                    '--guard-against-wild', 'blacklist_wildcard.txt',
-                    '--extra-white', 'custom-direct.list'],
+    'direct': ['--src', './jinx-rules',
+               '--fixed', 'whitelist.txt', '--wild', 'whitelist_wildcard.txt',
+               '--tag', 'direct', '--mode', 'exact',
+               '--guard-against-fixed', 'blacklist.txt',
+               '--guard-against-wild', 'blacklist_wildcard.txt',
+               '--extra-white', 'custom-direct.list'],
 }
 SRC_DIR = 'jinx-rules'
 
@@ -248,9 +251,9 @@ def seg_cross_format(root, rep):
         'ads': (root / PRODUCTS['ads']['mihomo'],
                 root / PRODUCTS['ads']['surge'],
                 root / PRODUCTS['ads']['singbox']),
-        'white-guard': (root / PRODUCTS['white-guard']['mihomo'],
-                        root / PRODUCTS['white-guard']['surge'],
-                        root / PRODUCTS['white-guard']['singbox']),
+        'direct': (root / PRODUCTS['direct']['mihomo'],
+                        root / PRODUCTS['direct']['surge'],
+                        root / PRODUCTS['direct']['singbox']),
     }
     for fam, (pm, ps, pb) in families.items():
         mi = parse_mihomo(pm)
@@ -346,8 +349,8 @@ def seg_doc_counts(root, rep, counts):
                           f'README 表 {name}: 声明 {got} != 实际 {real}',
                           '改了产物必须同步改文档条数')
 
-        # 5-b: README 数据徽章（放行 = white-guard 条数，拦截 = ads 条数）
-        badge = {'%E6%94%BE%E8%A1%8C': 'white-guard', '%E6%8B%A6%E6%88%AA': 'ads'}
+        # 5-b: README 数据徽章（放行 = direct 条数，拦截 = ads 条数）
+        badge = {'%E6%94%BE%E8%A1%8C': 'direct', '%E6%8B%A6%E6%88%AA': 'ads'}
         for enc, fam in badge.items():
             real = counts[fam]['mihomo']
             m = re.search(re.escape(enc) + r'-(\d+)%20', text)
@@ -375,7 +378,7 @@ def seg_doc_counts(root, rep, counts):
                               f'Details 表 {name}: 声明 {m.group(1)} != 实际 {real}',
                               '同一读数在两个文档里必须一致')
         # 「共 N 条」这类汇总句
-        real_w = counts['white-guard']['mihomo']
+        real_w = counts['direct']['mihomo']
         for m in re.finditer(r'共\s*(\d+)\s*条', dtext):
             rep.judge(int(m.group(1)) == real_w, 'doc',
                       f'Details「共 {m.group(1)} 条」== {real_w}'
@@ -440,7 +443,7 @@ def seg_source_headers(root, rep, counts):
     """源头 custom-*.list 的 extra 声明与实际条数，以及它是否真的进了产物。"""
     rep.section('7. 源头 custom-*.list')
     pairs = [('custom-ads.list', 'ads', '# extra:'),
-             ('custom-direct.list', 'white-guard', '# extra-white:')]
+             ('custom-direct.list', 'direct', '# extra-white:')]
     for name, fam, header_key in pairs:
         p = root / name
         if not p.is_file():

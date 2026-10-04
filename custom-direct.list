@@ -11,7 +11,7 @@
 # 语义：强制 DOMAIN-SUFFIX（该域名 + 全部子域）。
 #       写 *.tange365.com 即放行 tange365.com 与其所有子域。
 #
-# ⚠️ 只改本文件即可。不要手改 mihomo-white-guard.yaml / surge-white-guard.list ——
+# ⚠️ 只改本文件即可。不要手改 mihomo-direct.yaml / surge-direct.list ——
 #    那两个文件是生成产物，重跑一次转换就会被完全覆盖。
 #
 # 现有条目与依据

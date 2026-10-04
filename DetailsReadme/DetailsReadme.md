@@ -21,11 +21,11 @@
 | 客户端 | 文件 | 格式 | 条数 | 用途 |
 |:-------|:-----|:-----|-----:|:-----|
 | mihomo / OpenClash | `mihomo-ads.yaml` | `classical` | 3889 | 黑名单 · 拦截 |
-| mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 44 | 白名单 · 放行 |
+| mihomo / OpenClash | `mihomo-direct.yaml` | `classical` | 44 | 白名单 · 放行 |
 | Surge / Egern | `surge-ads.list` | `RULE-SET` / `rule_set` | 3889 | 黑名单 · 拦截 |
-| Surge / Egern | `surge-white-guard.list` | `RULE-SET` / `rule_set` | 44 | 白名单 · 放行 |
+| Surge / Egern | `surge-direct.list` | `RULE-SET` / `rule_set` | 44 | 白名单 · 放行 |
 | sing-box | `sing-box-ads.json` | `source` | 3889 | 黑名单 · 拦截 |
-| sing-box | `sing-box-white-guard.json` | `source` | 44 | 白名单 · 放行 |
+| sing-box | `sing-box-direct.json` | `source` | 44 | 白名单 · 放行 |
 
 🔵 **Egern 复用 Surge 那份文件**：两者规则集格式同源（`DOMAIN-SUFFIX` / `DOMAIN-WILDCARD` 逐字相同），无需独立产物。引用位置有两处：`rules` 段的 `rule_set`（连接阶段）、`forward` 段的 `proxy_rule_set`（DNS 阶段）。依据：姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) 四份现役 Egern profile 均如此引用，并将这两份登记为「共用规则集」。
 
@@ -158,7 +158,7 @@ Jinx/
 | 段 | 守什么 |
 |:-:|:-------|
 | 1 | 六份产物存在且非空 |
-| 2 | 三格式条数一致（ads 三份互等 / white-guard 三份互等） |
+| 2 | 三格式条数一致（ads 三份互等 / direct 三份互等） |
 | 3 | **跨格式逐条语义等价** —— 归一化后比对，不是只比条数 |
 | 4 | 文件头 `# entries` 自述 == 实际条数 |
 | 5 | README / DetailsReadme 的条数声明 == 文件实际 |
@@ -173,7 +173,7 @@ Jinx/
 
 ⚠️ 闸门自身也可能退化。`selftest_negative.py` 专治这个：它在临时副本仓里制造 6 种典型错误（手改产物 / 只改表头 / 跨格式差异 / 文档漂移 / 源头改了没重跑 / emoji 违规），要求闸门**逐一判负**，有漏报即判负。一个只会全绿的闸门与没有闸门等价 —— 这是本仓踩过的「永远绿的空操作」教训。
 
-📐 编写期该自测当场抓出两个真 bug，留痕备查：① 第 6 段比对时 `--src` 写法差异（ads 线用 `jinx-rules`、white-guard 线用 `./jinx-rules`，**因为它原样进表头**）会被误报成内容差异；② emoji 判定把 `U+2B00-2BFF` 整段当箭头排除，而 `U+2B50`（五角星形符号）正住在那段里 —— 导致句中 emoji 静默漏报。
+📐 编写期该自测当场抓出两个真 bug，留痕备查：① 第 6 段比对时 `--src` 写法差异（ads 线用 `jinx-rules`、direct 线用 `./jinx-rules`，**因为它原样进表头**）会被误报成内容差异；② emoji 判定把 `U+2B00-2BFF` 整段当箭头排除，而 `U+2B50`（五角星形符号）正住在那段里 —— 导致句中 emoji 静默漏报。
 
 📏 **行尾统一（2026-10-04 修复）**：产物此前在仓库内**行尾分裂** —— mihomo / Surge 四份是 CRLF、sing-box 两份是 LF。根因是 `convert_ruleset.py` 用 `write_text(text)` 写出，而 Python 的通用换行转换会把 `\n` 按平台写成 `os.linesep`：**Windows 出 CRLF、Linux 出 LF，同一脚本跨平台产出不同字节**。这导致 CI 在 Linux 上重跑生成必得 LF、与仓库内的 CRLF 不符，第 6 段当场判负。
 

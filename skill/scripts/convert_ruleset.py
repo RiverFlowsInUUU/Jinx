@@ -7,7 +7,7 @@
 
   # 白名单瘦身 -- 只保留真正会被黑名单误杀的条目(guard list)
   python convert_ruleset.py --src ./jinx-rules --out ./converted \\
-      --fixed whitelist.txt --wild whitelist_wildcard.txt --tag white-guard \\
+      --fixed whitelist.txt --wild whitelist_wildcard.txt --tag direct \\
       --guard-against-fixed blacklist.txt --guard-against-wild blacklist_wildcard.txt
 
   # 语义开关

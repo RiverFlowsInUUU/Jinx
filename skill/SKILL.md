@@ -74,7 +74,7 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
 
 **`--naming repo`（托管场景务必加）**：输出改为 `mihomo-<tag>.yaml` / `surge-<tag>.list`，即**与仓库现有文件名一致**，可直接覆盖上传、客户端 URL 一个字都不用改。不加则用上表的社区通用命名。
 
-> 命名对照（`--tag` 用 `ads` / `white-guard` 时）：`--naming repo` 产出的正是 `mihomo-ads.yaml`、`surge-white-guard.list` 这类托管常用名。
+> 命名对照（`--tag` 用 `ads` / `direct` 时）：`--naming repo` 产出的正是 `mihomo-ads.yaml`、`surge-direct.list` 这类托管常用名。
 
 > 不再输出 `behavior: domain` / Surge `DOMAIN-SET` 变体：这两者既装不下中缀通配，普通条目的子域语义又依赖实现细节。3.9k 条量级下 RULE-SET 的性能损失可忽略。
 
@@ -115,12 +115,12 @@ python $SK --src jinx-rules --out ./out --fixed blacklist.txt --wild blacklist_w
 
 # ② 白名单
 python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist_wildcard.txt \
-    --tag white-guard --mode exact --naming repo \
+    --tag direct --mode exact --naming repo \
     --guard-against-fixed blacklist.txt --guard-against-wild blacklist_wildcard.txt \
     --extra-white ./custom-direct.list
 ```
 
-预期读数：`ads 3889` / `white-guard 44`（上游白名单 325 条 → guard 裁到 42，再 +2 extra-white：`*.tange365.com`、`*.wechatos.net`）；sing-box 侧 `ads: domain_suffix=3740 domain_regex=149` / `white-guard: domain=41 domain_suffix=3`。
+预期读数：`ads 3889` / `direct 44`（上游白名单 325 条 → guard 裁到 42，再 +2 extra-white：`*.tange365.com`、`*.wechatos.net`）；sing-box 侧 `ads: domain_suffix=3740 domain_regex=149` / `direct: domain=41 domain_suffix=3`。
 ⚠️ 这行读数**随源头漂**，写完必跑下方闸门核对 —— 它同时校验文档声明与产物实际，读数字对不上会当场判负。
 
 **验收**：改动前后对 diff，**只允许三处变化** —— 表头 `# entries` 数字、`# extra:` 那一行、末尾按顺序多出/少掉 N 条；其余正文**逐行不变**。
@@ -155,7 +155,7 @@ python skill/tests/selftest_negative.py        # 负样本：证明闸门本身�
 
 ```bash
 sing-box rule-set compile out/sing-box-ads.json -o /tmp/a.srs        # 结构合法即通过
-sing-box rule-set compile out/sing-box-white-guard.json -o /tmp/w.srs
+sing-box rule-set compile out/sing-box-direct.json -o /tmp/w.srs
 # 再把两份 JSON 用 type:local + format:source 挂进最小配置跑 sing-box check
 ```
 
@@ -205,7 +205,7 @@ rule-providers:
     interval: 86400
 
 rules:
-  - RULE-SET,jinx-white-guard,DIRECT   # 白名单(精确放行)在前
+  - RULE-SET,jinx-direct,DIRECT   # 白名单(精确放行)在前
   - RULE-SET,jinx-ads,REJECT           # ⚠️ 必须在 DIRECT/GEOSITE,cn 之前
 ```
 
@@ -215,7 +215,7 @@ rules:
 
 ```
 [Rule]
-RULE-SET,https://host/surge-white-guard.list,DIRECT
+RULE-SET,https://host/surge-direct.list,DIRECT
 RULE-SET,https://host/surge-ads.list,REJECT,pre-matching,extended-matching
 ```
 
@@ -236,9 +236,9 @@ RULE-SET,https://host/surge-ads.list,REJECT,pre-matching,extended-matching
     "rule_set": [
       {
         "type": "remote",
-        "tag": "jinx-white-guard",
+        "tag": "jinx-direct",
         "format": "source",
-        "url": "https://host/sing-box-white-guard.json",
+        "url": "https://host/sing-box-direct.json",
         "update_interval": "1d"
       },
       {
@@ -250,7 +250,7 @@ RULE-SET,https://host/surge-ads.list,REJECT,pre-matching,extended-matching
       }
     ],
     "rules": [
-      { "rule_set": ["jinx-white-guard"], "outbound": "direct" },
+      { "rule_set": ["jinx-direct"], "outbound": "direct" },
       { "rule_set": ["jinx-ads"], "action": "reject" }
     ]
   }
@@ -272,7 +272,7 @@ RULE-SET,https://host/surge-ads.list,REJECT,pre-matching,extended-matching
 
 ```bash
 python convert_ruleset.py --src <源目录> --out <输出目录> \
-    --fixed whitelist.txt --wild whitelist_wildcard.txt --tag white-guard \
+    --fixed whitelist.txt --wild whitelist_wildcard.txt --tag direct \
     --mode exact \
     --guard-against-fixed blacklist.txt --guard-against-wild blacklist_wildcard.txt
 ```
@@ -316,6 +316,13 @@ python convert_ruleset.py --src <源目录> --out <输出目录> \
   - 必查清单（按"最容易漏"排序）：① **仓库简介**（`upload_to_github.py` 的 `--description` 默认值 **＋ GitHub 上的实际值**，改名/改述后要 `gh repo edit --description` 或脚本 `--description` 覆盖）；② README 顶部 slogan 与徽章行；③ README 订阅表 / 接入节 / 能力矩阵；④ `DetailsReadme` 的订阅表、转换原理表、文件结构；⑤ 本文件「适用」与「通配语义映射表」；⑥ `convert_ruleset.py` / `verify_jinx_src.py` 的 docstring 与注释里列举客户端的句子；⑦ 第三方规则（AWAvenue）的对应行。
   - **判据**：`grep -rn` 搜「现有平台名」的**两两组合**（如 `mihomo.*Surge`、`Surge.*sing-box`），**逐条语义甄别**——不是所有命中都要改（描述历史状态的句子应保持原样，如 CHANGELOG 里"当年只有两平台"的记录），但每一处都要显式判定"该改"或"为何不改"。
   - 该判据已固化为断言：`verify_jinx_src.py` 第 10 段扫面向外部的说明（仓库简介来源、README、DetailsReadme、SKILL），要求平台清单与产物实际**齐备**。
+- ⚠️ **改一个产物的文件名 = 一次改全套，且这是「破坏性改动」（订阅地址变更）。** 与"新增平台"同级：名字散落在生成参数、文档、示例、断言、源头注释五层，漏一处就留下静默失真。2026-10-04 实证：`*-white-guard.*` → `*-direct.*` 共涉及 52 处引用。
+  - **先想清楚代价再动手**：改名 = **旧订阅地址 404**。姐妹仓 `Self-Configuration` 与本仓 README 的 `skill/SKILL.md`「删旧文件前先确认引用方已迁移」都写明：规则集 URL 404 会导致客户端拉取失败，无法确认引用方已迁移时**宁可保留旧文件并标注废弃**。本仓 2026-10-04 这次是**用户明确确认接受旧地址失效**才直接删的。先例：当年 mihomo 侧 `.list` → `.yaml` 改名，CHANGELOG 亦明确记了「mihomo 旧地址失效」。
+  - **单一真源是生成参数**：产物名由 `convert_ruleset.py --tag <名>` 决定，所以**先改 `--tag`**（`verify_jinx_src.py` 的 `REGEN` 表与 `PRODUCTS` 表随之同步），再重跑生成——**不要用 `git mv` 手改文件名**，否则产物与生成器脱节，`--check` 式的可复现断言会红。
+  - 改完**必须验证内容零改动**：新旧产物**逐字节比对**（`fc` / `cmp` / Python `==`）。纯改名不该动任何一个字节；有差异说明 `--tag` 之外还碰到了别的东西。
+  - 必查清单（按"最容易漏"排序）：① 生成参数与断言表（`REGEN` / `PRODUCTS`）；② README 订阅表 / 接入节示例 / 目录锚点；③ `DetailsReadme` 订阅表与转换原理表；④ 本文件的生成命令、验收命令、映射表；⑤ `custom-*.list` 表头那句「不要手改 xxx-yyy.*」；⑥ 示例里的 **provider / tag 名**（`jinx-white-guard` → `jinx-direct`，文件名变了名字要对齐）；⑦ 仓库简介若含文件名。
+  - **CHANGELOG 一律不改**：那里写的是"当时叫什么"，改了就是篡改历史（本仓 2026-10-04 那次保留了 6 处旧名，正确）。
+  - 判据：`grep -rn '<旧名>'` —— 期望命中**只剩 CHANGELOG** 与显式的历史说明。
 - 下沉对象：转换原理表、白名单推导过程、CDN 缓存与生效判据、客户端参数逐条解释、文件结构树的说明、客户端开关的机理与副作用。
 - 下沉文档首行要写「这是 README 之外的补充材料」，末尾给「← 回到 README」，章节与 README 的小节对应，便于对照。
 

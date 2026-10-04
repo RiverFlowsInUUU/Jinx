@@ -46,7 +46,7 @@ def case(label, expect):
 
 @case('手改产物：白名单 mihomo 删掉一条', '条数一致')
 def _(w):
-    p = w / 'mihomo-white-guard.yaml'
+    p = w / 'mihomo-direct.yaml'
     lines = p.read_text(encoding='utf-8').splitlines()
     idx = next(i for i, l in enumerate(lines) if l.strip().startswith('- '))
     lines.pop(idx)
@@ -55,7 +55,7 @@ def _(w):
 
 @case('手改产物：只把表头自述条数改掉', '文件头 # entries')
 def _(w):
-    p = w / 'surge-white-guard.list'
+    p = w / 'surge-direct.list'
     t = p.read_text(encoding='utf-8').replace('# entries: ', '# entries: 99 # ')
     lines = [l for l in t.splitlines()]
     for i, l in enumerate(lines):
@@ -66,7 +66,7 @@ def _(w):
 
 @case('手改产物：sing-box 少一条（跨格式差异）', '跨格式语义等价')
 def _(w):
-    p = w / 'sing-box-white-guard.json'
+    p = w / 'sing-box-direct.json'
     d = json.loads(p.read_text(encoding='utf-8'))
     for rule in d['rules']:
         for v in rule.values():
@@ -91,11 +91,11 @@ def _(w):
     p = w / 'README.md'
     t = p.read_text(encoding='utf-8')
     for old, new in [
-        ('[`surge-white-guard.list`](https://raw.githubusercontent.com/'
-         'RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44`',
-         '[`surge-white-guard.list`](https://raw.githubusercontent.com/'
-         'RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `50`'),
-        ('| `surge-white-guard.list` | 44 |', '| `surge-white-guard.list` | 50 |'),
+        ('[`surge-direct.list`](https://raw.githubusercontent.com/'
+         'RiverFlowsInUUU/Jinx/main/surge-direct.list) `44`',
+         '[`surge-direct.list`](https://raw.githubusercontent.com/'
+         'RiverFlowsInUUU/Jinx/main/surge-direct.list) `50`'),
+        ('| `surge-direct.list` | 44 |', '| `surge-direct.list` | 50 |'),
     ]:
         if old in t:
             t = t.replace(old, new)
