@@ -29,6 +29,8 @@
   9. 行尾符与 BOM（BOM 硬判负；行尾只做同族一致性与事实播报）
  10. 平台清单齐备 —— 面向外部的说明（仓库简介来源 / README / DetailsReadme / SKILL）
      必须列全所有平台。实证：sing-box 曾从仓库简介里漏了一周无人发现。
+ 11. 表格内 emoji 宽度一致 —— 同一表格的 emoji 码位数必须相同，
+     否则带 U+FE0F 的那个会占两格、该行在宽字符字体下错位。
 
 闸门自身可信度由 skill/tests/selftest_negative.py 保证：它在临时副本仓里
 制造 6 种典型错误，要求本脚本逐一判负 —— 防止闸门退化成「永远绿的空操作」。
@@ -768,6 +770,71 @@ def seg_platform_coverage(root, rep):
               '断言无法直接校验）')
 
 
+def seg_table_emoji_width(root, rep):
+    """第 11 段：同一表格内的 emoji 必须码位数一致（否则纵向不对齐）。
+
+    动机（2026-10-04 用户实测反馈）：能力矩阵表的「放行」行看起来比别的行右移。
+    根因是 `🛡️` = **U+1F6E1 + U+FE0F**（两码位，带变体选择符），而同行其他
+    emoji（`🚫` `🧩` `🎯` `🔄` `📌`）都是**单码位**。宽字符字体下 `🛡️` 占两格，
+    该行的文字整体后移，表格看起来就是没对齐。
+
+    ⚠️ 这类问题**肉眼容易漏**：GitHub 的默认字体里两者宽度相近，但在等宽字体、
+       终端预览、部分移动端字体下差异明显。故用码位数机械判定。
+    ⚠️ 只判**同一表格内**的一致性 —— 段落引导符（如 `⚠️` 开头的独立段落）
+       不参与纵向对齐，各自独立，不属本段范围。
+
+    口径：同一表格的所有数据行，其行首（或任一单元格起始）emoji 的码位数
+    必须一致。稳妥做法是**全用单码位 emoji**（避开 FE0F）。
+    """
+    rep.section('11. 表格内 emoji 宽度一致（对齐）')
+    targets = ['README.md', 'DetailsReadme/DetailsReadme.md']
+    VS = '\ufe0f'
+    bad_tables = 0
+    checked = 0
+
+    for rel in targets:
+        p = root / rel
+        if not p.is_file():
+            continue
+        lines = p.read_text(encoding='utf-8').splitlines()
+        i = 0
+        while i < len(lines):
+            is_head = (lines[i].strip().startswith('|') and i + 1 < len(lines)
+                       and re.match(r'^\|[\s:|-]+\|$', lines[i + 1].strip()))
+            if not is_head:
+                i += 1
+                continue
+            body, j = [], i + 2
+            while j < len(lines) and lines[j].strip().startswith('|'):
+                body.append(lines[j])
+                j += 1
+
+            widths = []
+            for line in [lines[i]] + body:
+                for cell in line.strip().strip('|').split('|'):
+                    c = cell.strip()
+                    if c and ord(c[0]) > 0x2000:
+                        widths.append(2 if (len(c) > 1 and c[1] == VS) else 1)
+            if widths:
+                checked += 1
+                if len(set(widths)) > 1:
+                    bad_tables += 1
+                    rep.judge(False, 'emoji',
+                              f'{rel} 第 {i + 1} 行起的表格：emoji 码位数不一致 {widths}',
+                              '带 FE0F 的 emoji 占两格，会让该行在宽字符字体下错位；'
+                              '同表内统一用单码位 emoji（避开 U+FE0F）')
+            i = j
+
+    if not checked:
+        rep.judge(False, 'emoji', '未定位到任何带 emoji 的表格',
+                  '定位失败说明版式已变，需同步本段逻辑')
+    elif not bad_tables:
+        rep.judge(True, 'emoji', f'{checked} 个表格的 emoji 码位数均一致')
+        rep.judge(True, 'emoji',
+                  '段落引导符（如 ⚠️）带 FE0F 属正常，不在本段范围 —— '
+                  '它们各自独立成行，不参与纵向对齐')
+
+
 # ---------------------------------------------------------------- main
 
 def collect_counts(root):
@@ -803,6 +870,7 @@ def run(root):
     seg_style(root, rep)
     seg_lineendings(root, rep)
     seg_platform_coverage(root, rep)
+    seg_table_emoji_width(root, rep)
 
     print(rep.render())
     print()

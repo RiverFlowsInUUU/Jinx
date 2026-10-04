@@ -174,6 +174,25 @@ def _(w):
                  encoding='utf-8')
 
 
+@case('表格 emoji 宽度不一致：放行行换回带 FE0F 的 🛡️（第 11 段）', '表格内 emoji 宽度')
+def _(w):
+    """把能力矩阵的「✅ 放行」换回 `🛡️ 放行`。
+
+    `🛡️` = U+1F6E1 + **U+FE0F**（两码位），同表其他 emoji 都是单码位 ⇒
+    宽字符字体下该行占两格、文字整体后移，表格看起来「没对齐」——
+    这是用户 2026-10-04 实际反馈的现象。
+
+    ⚠️ 这类缺陷肉眼在 GitHub 默认字体下几乎看不出（宽度相近），
+       只有终端 / 等宽字体 / 部分移动端才明显 —— 故必须机械判定，
+       本负样本守的就是这条判据。
+    """
+    p = w / 'README.md'
+    t = p.read_text(encoding='utf-8')
+    old = '| ✅ 放行 | **44 条** |'
+    assert old in t, '负样本失效：能力矩阵的放行行已改版'
+    p.write_text(t.replace(old, '| 🛡️ 放行 | **44 条** |', 1), encoding='utf-8')
+
+
 def main():
     if not TARGET.is_file():
         print(f'❌ 前置不达标：找不到 {TARGET}')

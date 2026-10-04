@@ -41,7 +41,7 @@
 
 🔗 文件名即订阅地址 —— 右键「复制链接地址」即可取用。
 
-| <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">🛡️ 放行规则集</div> |
+| <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">✅ 放行规则集</div> |
 |:--|:--|:--|
 | **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-white-guard.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml) `44` |
 | **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-white-guard.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44` |
@@ -74,10 +74,10 @@
 | <div align="center">维度</div> | <div align="center">Jinx 规则集</div> | <div align="center">说明</div> |
 |:--|:--|:--|
 | 🚫 拦截 | **3889 条** | 3740 条域名后缀 + 149 条中缀通配 |
-| 🛡️ 放行 | **44 条** | 41 条精确 + 3 条后缀（含 2 条手工补充） |
+| ✅ 放行 | **44 条** | 41 条精确 + 3 条后缀（含 2 条手工补充） |
 | 🧩 各端一致 | **逐条等价** | mihomo / Surge / Egern / sing-box 归一化后零差异 |
-| ✂️ 增删 | **一条不增不减** | 只做格式转换，不改上游判定 |
-| 🔁 可复现 | **逐字节一致** | 产物 == 源头重跑结果，CI 对拍 |
+| 🎯 增删 | **一条不增不减** | 只做格式转换，不改上游判定 |
+| 🔄 可复现 | **逐字节一致** | 产物 == 源头重跑结果，CI 对拍 |
 | 📌 上游快照 | `3.1.9` · `2026-09-15` | 上游更新后需重跑生成 |
 
 🚫 **只做减法不做加法**：本仓不替你判断"哪些广告该拦"，上游收录什么就转什么。唯一例外是 `custom-*.list` 里人工补充的域名，每一条都写明依据。
@@ -225,7 +225,7 @@ forward:
 
 | <div align="center">顺序</div> | <div align="center">规则</div> | <div align="center">去向</div> |
 |:-:|:-----|:-----|
-| 1 | 🛡️ 白名单 | `DIRECT` |
+| 1 | ✅ 白名单 | `DIRECT` |
 | 2 | 🚫 广告拦截 | `REJECT` |
 | 3 | 🚦 常规分流（`GEOSITE,cn` / `GEOIP,cn`） | `DIRECT` |
 
@@ -264,7 +264,7 @@ uci commit openclash
 |:-----|:-----|
 | 📘 [`DetailsReadme/DetailsReadme.md`](DetailsReadme/DetailsReadme.md) | 白名单来源 · 两个源的缓存与生效判据 · 秋风对比 · 转换原理 · OpenClash 细节 |
 | 🧪 [`skill/SKILL.md`](skill/SKILL.md) | 匹配语义判定 · 通配映射 · 白名单瘦身 · 生成命令 · 验收闸门 |
-| 🗓️ [`CHANGELOG.md`](CHANGELOG.md) | 规则变动记录 |
+| 📅 [`CHANGELOG.md`](CHANGELOG.md) | 规则变动记录 |
 
 🧷 六份文件同一次生成、内容等价，由 CI 每次提交自动校验（三格式逐条比对 + 条数声明 + 产物可复现），读数字不符会直接标红。
 
@@ -275,7 +275,7 @@ uci commit openclash
 | <div align="center">项</div> | <div align="center">说明</div> |
 |:--|:--|
 | 📄 上游 | [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules) · 数据 `3.1.9` · `2026-09-15` |
-| ⚖️ 许可 | 上游未声明（`license: null`），本仓亦不主张 |
+| 📜 许可 | 上游未声明（`license: null`），本仓亦不主张 |
 | 🧬 规则数据 | 版权归上游及其原始来源 |
 | 🧪 `skill/` | 转换脚本与方法论，不含上游数据，可自由取用 |
 
