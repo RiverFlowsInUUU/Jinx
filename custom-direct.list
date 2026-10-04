@@ -14,10 +14,17 @@
 # ⚠️ 只改本文件即可。不要手改 mihomo-white-guard.yaml / surge-white-guard.list ——
 #    那两个文件是生成产物，重跑一次转换就会被完全覆盖。
 #
-# 现有条目与依据（2026-09-19 实测）
+# 现有条目与依据
 #
-# *.tange365.com  相机类 App「小鲸看看」自身业务域（账户 / 设备 / 云存储同步）。
+# *.tange365.com  相机类 App「小鲸看看」自身业务域（账户 / 设备 / 云存储同步）。2026-09-19 实测。
 #                 冷启动拉起的爱奇艺广告 SDK t7z.cupid.iqiyi.com 已被黑名单拦掉，
 #                 但 tange365.com 是功能域，必须直连，否则 App 异常。
 #
+# *.wechatos.net  用户指定放行。2026-10-04 追加。语义 = wechatos.net 及其全部子域
+#                 （如 api.wechatos.net / cdn.wechatos.net），对应的规则是
+#                 DOMAIN-SUFFIX,wechatos.net —— 与用户的「前缀是 wechatos.net 的所有域名直连」
+#                 经确认取「后缀语义」一解（另一解「任何以 wechatos.net 开头的域名」需用
+#                 DOMAIN-KEYWORD，范围更宽，本次不采用）。
+#
 *.tange365.com
+*.wechatos.net

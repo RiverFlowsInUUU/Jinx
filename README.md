@@ -14,7 +14,7 @@
 [![sing-box](https://img.shields.io/badge/sing--box-source%20JSON-blue?style=flat-square)](#-接入)
 
 [![Ads](https://img.shields.io/badge/%E6%8B%A6%E6%88%AA-3889%20%E6%9D%A1-0969da?style=flat-square)](#-订阅)
-[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-43%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
+[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-44%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
 [![AWAvenue](https://img.shields.io/badge/%E7%A7%8B%E9%A3%8E-965%20%E6%9D%A1-f9c513?style=flat-square)](#-订阅)
 
 </div>
@@ -39,11 +39,11 @@
 | 客户端 | 文件 | 条数 | 用途 |
 |:-------|:-----|-----:|:-----|
 | mihomo / OpenClash | `mihomo-ads.yaml` | 3889 | 拦截 |
-| mihomo / OpenClash | `mihomo-white-guard.yaml` | 43 | 放行 |
+| mihomo / OpenClash | `mihomo-white-guard.yaml` | 44 | 放行 |
 | Surge | `surge-ads.list` | 3889 | 拦截 |
-| Surge | `surge-white-guard.list` | 43 | 放行 |
+| Surge | `surge-white-guard.list` | 44 | 放行 |
 | sing-box | `sing-box-ads.json` | 3889 | 拦截 |
-| sing-box | `sing-box-white-guard.json` | 43 | 放行 |
+| sing-box | `sing-box-white-guard.json` | 44 | 放行 |
 
 ⭐ **Raw GitHub** · 首选
 

@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-10-04
+
+**变更**
+
+- 🛡️ **白名单 43 → 44 条：新增 `*.wechatos.net`** —— 用户指定放行，语义为 `wechatos.net` 及其全部子域（如 `api.wechatos.net` / `cdn.wechatos.net`），三平台落点分别为 `DOMAIN-SUFFIX,wechatos.net`（mihomo / Surge）与 `domain_suffix: ["wechatos.net"]`（sing-box）。经 `custom-direct.list` 的 `--extra-white` 通道并入，追加在 guard 过滤之后、不参与碰撞裁剪。
+  - 📌 **语义口径留痕**：「前缀是 wechatos.net 的所有域名」有歧义，两种解法范围不同 —— 本次取**后缀语义**（`DOMAIN-SUFFIX`，放行该域 + 全部子域）；另一种「任何以 `wechatos.net` 开头的域名」（如 `wechatos.net.abc.com`）需 `DOMAIN-KEYWORD,wechatos.net`，范围更宽，**本次不采用**。日后若要改判，按此口径重议。
+  - 📐 三份产物同一次重跑生成，条数 44 / 44 / 44 一致；`sing-box` 侧字段构成 `domain=41 domain_suffix=3`（原 2 项 + 本次 1 项）。
+  - ✅ **验收（对 diff）**：与改动前对拍，**只出现三处允许的变化** —— 表头 `# entries: 43 → 44`、`# extra-white: custom-direct.list(1) → (2)`、末尾按顺序多出 1 条 `DOMAIN-SUFFIX,wechatos.net`；其余正文**逐行不变**（sing-box JSON 无表头，仅 `domain_suffix` 数组末尾追加 1 项，既有 41 + 2 项逐项一致）。README 与 `DetailsReadme` 的条数声明同步 43 → 44。
+
+---
+
 ## 2026-09-28
 
 **变更**

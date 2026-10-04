@@ -22,11 +22,11 @@
 | mihomo / OpenClash | `mihomo-ads.yaml` | `classical` | 3889 | 黑名单 · 拦截 |
 | mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 43 | 白名单 · 放行 |
 | Surge | `surge-ads.list` | `RULE-SET` | 3889 | 黑名单 · 拦截 |
-| Surge | `surge-white-guard.list` | `RULE-SET` | 43 | 白名单 · 放行 |
+| Surge | `surge-white-guard.list` | `RULE-SET` | 44 | 白名单 · 放行 |
 | sing-box | `sing-box-ads.json` | `source` | 3889 | 黑名单 · 拦截 |
-| sing-box | `sing-box-white-guard.json` | `source` | 43 | 白名单 · 放行 |
+| sing-box | `sing-box-white-guard.json` | `source` | 44 | 白名单 · 放行 |
 
-🧩 **白名单怎么来的**：上游白名单（325 条）中会被黑名单命中的 **42 条**，加 **1 条**手工补充（`*.tange365.com`，「小鲸看看」相机 App 的账户 / 设备 / 云存储域），共 43 条。
+🧩 **白名单怎么来的**：上游白名单（325 条）中会被黑名单命中的 **42 条**，加 **2 条**手工补充（`*.tange365.com`，「小鲸看看」相机 App 的账户 / 设备 / 云存储域；`*.wechatos.net`，用户指定放行），共 44 条。
 
 ⚖️ 白名单的对照面是**上游黑名单** —— 生成时不把 `custom-*.list` 算进去，所以手工追加的域名**不会**因为「上游已放行」而被白名单豁免。跟上游白名单对着干等于静默误杀，这条前提见 [`skill/SKILL.md`](../skill/SKILL.md)。
 

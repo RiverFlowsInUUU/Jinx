@@ -1,8 +1,8 @@
 # auto-converted by adblock-ruleset-port
 # source: ./jinx-rules
 # mode: exact
-# entries: 43
-# extra-white: custom-direct.list(1)
+# entries: 44
+# extra-white: custom-direct.list(2)
 payload:
   - 'DOMAIN,zlink.ugsdk.cn'
   - 'DOMAIN,praisewindow.ugsdk.cn'
@@ -47,3 +47,4 @@ payload:
   - 'DOMAIN,seeds-sina.xycdn.com'
   - 'DOMAIN-SUFFIX,wagbridge.alsc-prd.tanx.com'
   - 'DOMAIN-SUFFIX,tange365.com'
+  - 'DOMAIN-SUFFIX,wechatos.net'
