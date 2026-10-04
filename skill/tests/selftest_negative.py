@@ -151,9 +151,11 @@ def _(w):
     """
     p = w / 'skill' / 'scripts' / 'upload_to_github.py'
     t = p.read_text(encoding='utf-8')
-    old = 'mihomo / Surge / sing-box'
-    assert old in t, '负样本失效：简介默认值里已无预期文本'
-    p.write_text(t.replace(old, 'mihomo / Surge', 1), encoding='utf-8')
+    # ⚠️ 锚点会随平台增删而过期 —— 这里断言必须命中，否则抛错而非静默通过
+    #    （实测：加入 Egern 后本锚点曾失效并被自测当场抓出）。
+    old = 'mihomo / Surge / Egern / sing-box'
+    assert old in t, '负样本失效：简介默认值里已无预期文本（平台清单可能又变了）'
+    p.write_text(t.replace(old, 'mihomo / Surge / Egern', 1), encoding='utf-8')
 
 
 @case('平台清单缺一端：转换原理表头去掉 sing-box 列（第 10 段）', '平台清单齐备')
@@ -166,9 +168,9 @@ def _(w):
     """
     p = w / 'DetailsReadme' / 'DetailsReadme.md'
     t = p.read_text(encoding='utf-8')
-    old = '| 上游写法 | 含义 | mihomo | Surge | sing-box |'
-    assert old in t, '负样本失效：转换原理表头已改版'
-    p.write_text(t.replace(old, '| 上游写法 | 含义 | mihomo | Surge |', 1),
+    old = '| 上游写法 | 含义 | mihomo | Surge | Egern | sing-box |'
+    assert old in t, '负样本失效：转换原理表头已改版（平台列可能又变了）'
+    p.write_text(t.replace(old, '| 上游写法 | 含义 | mihomo | Surge | Egern |', 1),
                  encoding='utf-8')
 
 

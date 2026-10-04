@@ -2,7 +2,7 @@
 
 # 🛑 Jinx 去广告规则
 
-**iOS 拦得住的广告，mihomo / Surge / sing-box 也拦得住**
+**iOS 拦得住的广告，mihomo / Surge / Egern / sing-box 也拦得住**
 
 上游 Jinx 黑/白名单的格式转换 · 规则一条不增不减
 
@@ -11,6 +11,7 @@
 
 [![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](#-接入)
 [![Surge](https://img.shields.io/badge/Surge-RULE--SET-orange?style=flat-square)](#-接入)
+[![Egern](https://img.shields.io/badge/Egern-%E5%A4%8D%E7%94%A8%20Surge%20%E6%A0%BC%E5%BC%8F-8957e5?style=flat-square)](#-接入)
 [![sing-box](https://img.shields.io/badge/sing--box-source%20JSON-blue?style=flat-square)](#-接入)
 [![CI](https://github.com/RiverFlowsInUUU/Jinx/actions/workflows/ci.yml/badge.svg)](https://github.com/RiverFlowsInUUU/Jinx/actions/workflows/ci.yml)
 
@@ -27,7 +28,7 @@
 - [📥 订阅](#-订阅)
   - [🧱 Jinx 规则集](#-jinx-规则集)
   - [🤝 AWAvenue 秋风广告规则](#-awavenue-秋风广告规则)
-- [🧬 一条不差 · 三端同源](#-一条不差--三端同源)
+- [🧬 一条不差 · 四端同源](#-一条不差--四端同源)
 - [🔌 接入](#-接入)
 - [📋 规则顺序](#-规则顺序)
 - [🚧 OpenClash](#-openclash)
@@ -38,12 +39,15 @@
 
 📦 按客户端各取两份：**拦截**在前、**放行**在后。地址就在表内文件名上 —— **右键「复制链接地址」**即可，不必再翻找。
 
+✨ **Egern 不需要另找文件** —— 它与 Surge 同格式，直接复用那两份 `.list`。
+
 ### 🧱 Jinx 规则集
 
 | <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">🛡️ 放行规则集</div> |
 |:--|:--|:--|
 | **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-white-guard.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-white-guard.yaml) `44` |
 | **Surge** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-white-guard.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list) `44` |
+| **Egern** | 同上 · 直接复用 ↑ | 同上 · 直接复用 ↑ |
 | **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-white-guard.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-white-guard.json) `44` |
 
 📌 表内链接指向 **Raw GitHub**（首选源）。要换成 jsDelivr 备用源，把
@@ -66,15 +70,15 @@
 
 ---
 
-## 🧬 一条不差 · 三端同源
+## 🧬 一条不差 · 四端同源
 
-🔬 不是"抄了一份列表"，是**同一批规则换个写法的镜像** —— 三端逐条等价，由 CI 每次提交对拍。
+🔬 不是"抄了一份列表"，是**同一批规则换个写法的镜像** —— 各端逐条等价，由 CI 每次提交对拍。
 
 | <div align="center">维度</div> | <div align="center">Jinx 规则集</div> | <div align="center">说明</div> |
 |:--|:--|:--|
 | 🚫 拦截 | **3889 条** | 3740 条域名后缀 + 149 条中缀通配 |
 | 🛡️ 放行 | **44 条** | 41 条精确 + 3 条后缀（含 2 条手工补充） |
-| 🧩 三端一致 | **逐条等价** | mihomo / Surge / sing-box 归一化后零差异 |
+| 🧩 各端一致 | **逐条等价** | mihomo / Surge / Egern / sing-box 归一化后零差异 |
 | ✂️ 增删 | **一条不增不减** | 只做格式转换，不改上游判定 |
 | 🔁 可复现 | **逐字节一致** | 产物 == 源头重跑结果，CI 对拍 |
 | 📌 上游快照 | `3.1.9` · `2026-09-15` | 上游更新后需重跑生成 |
@@ -133,6 +137,48 @@ RULE-SET,https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.l
 ```
 
 💡 `pre-matching` 把 REJECT 提前到 DNS / 连接建立阶段，`extended-matching` 按 TLS SNI / HTTP Host 额外匹配，处理 App 直连 IP 的情况 —— 两者都只对 REJECT 系策略生效，白名单行不加。
+
+</details>
+
+<details>
+<summary>🟣 <b>Egern</b> · 直接复用 Surge 那份 <code>.list</code></summary>
+
+✨ **不用另找文件** —— Egern 的规则集格式与 Surge 同源，`surge-white-guard.list` 与 `surge-ads.list` 原样可用。
+
+```yaml
+# ① 连接阶段：走规则匹配（白名单在前、拦截在后）
+rules:
+- rule_set:
+    name: Jinx-CN
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    policy: DIRECT
+    update_interval: 604800
+- rule_set:
+    name: Jinx-Ads
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+    policy: AD
+    update_interval: 604800
+    # 其余规则接在后面
+```
+
+```yaml
+# ② DNS 阶段：防泄露的一环（可选，但推荐 —— 广告域在解析阶段就拒答）
+forward:
+- proxy_rule_set:
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-white-guard.list
+    value: Domestic-DNS
+- proxy_rule_set:
+    match: https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list
+    value: reject
+- domain_wildcard: '*'          # 兜底必须指向「代理没起来时也能用」的加密组
+  value: Domestic-DNS
+```
+
+💡 `update_interval: 604800` 是一周（秒）—— Egern 官方**未文档化**该键缺省值，**不写就是行为不可知**，建议显式钉死。
+
+💡 `policy` / `value` 里的组名（`AD` / `Direct` / `Domestic-DNS`）按你自己的配置改；上面用的是常见写法。
+
+💡 两处引用**同一份文件**即可：`rules` 段管连接，`forward` 段管 DNS。这份文件是**纯域名、零 IP 条目**，不会因 IP 类规则触发额外解析。
 
 </details>
 

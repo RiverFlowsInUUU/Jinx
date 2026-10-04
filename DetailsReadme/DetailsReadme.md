@@ -24,8 +24,11 @@
 | mihomo / OpenClash | `mihomo-white-guard.yaml` | `classical` | 44 | 白名单 · 放行 |
 | Surge | `surge-ads.list` | `RULE-SET` | 3889 | 黑名单 · 拦截 |
 | Surge | `surge-white-guard.list` | `RULE-SET` | 44 | 白名单 · 放行 |
+| Egern | `surge-ads.list` · `surge-white-guard.list` | `rule_set` | 3889 / 44 | 黑名单 / 白名单 · **直接复用** |
 | sing-box | `sing-box-ads.json` | `source` | 3889 | 黑名单 · 拦截 |
 | sing-box | `sing-box-white-guard.json` | `source` | 44 | 白名单 · 放行 |
+
+🔵 **Egern 无独立产物**：它的规则集格式与 Surge 同源（`DOMAIN-SUFFIX` / `DOMAIN-WILDCARD` 逐字相同），直接引用 `surge-*.list` 即可 —— 引用位置有两处：`rules` 段的 `rule_set`（连接阶段）与 `forward` 段的 `proxy_rule_set`（DNS 阶段）。依据：姊妹仓 [Self-Configuration](https://github.com/RiverFlowsInUUU/Self-Configuration) 的四份现役 Egern profile 全部这样引用，并把这两份登记为「共用规则集」。
 
 🧩 **白名单怎么来的**：上游白名单（325 条）中会被黑名单命中的 **42 条**，加 **2 条**手工补充（`*.tange365.com`，「小鲸看看」相机 App 的账户 / 设备 / 云存储域；`*.wechatos.net`，用户指定放行），共 44 条。
 
@@ -93,14 +96,14 @@
 
 ## 🔄 5 转换原理
 
-| 上游写法 | 含义 | mihomo | Surge | sing-box |
-|:---------|:-----|:-------|:------|:---------|
-| `bugly.qq.com` | 该域 + 全部子域 | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` | `domain_suffix` |
-| `*.cupid.iqiyi.com` | 同上（等价） | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` | `domain_suffix` |
-| `p*-ad.adkwai.com` | 中缀通配（单级） | `DOMAIN-REGEX` | `DOMAIN-WILDCARD` | `domain_regex` |
-| 上游白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` | `domain` |
+| 上游写法 | 含义 | mihomo | Surge | Egern | sing-box |
+|:---------|:-----|:-------|:------|:------|:---------|
+| `bugly.qq.com` | 该域 + 全部子域 | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` | 同 Surge | `domain_suffix` |
+| `*.cupid.iqiyi.com` | 同上（等价） | `DOMAIN-SUFFIX` | `DOMAIN-SUFFIX` | 同 Surge | `domain_suffix` |
+| `p*-ad.adkwai.com` | 中缀通配（单级） | `DOMAIN-REGEX` | `DOMAIN-WILDCARD` | 同 Surge | `domain_regex` |
+| 上游白名单 `qq.com` | 仅精确，不继承子域 | `DOMAIN` | `DOMAIN` | 同 Surge | `domain` |
 
-- 🎯 **三端唯一差异在 149 条中缀通配的写法** —— Surge 用 `DOMAIN-WILDCARD`；mihomo 不支持星号内嵌，改写成 `DOMAIN-REGEX`；sing-box 落在 `domain_regex`（同为 Go RE2 正则，转换式与 mihomo 一致）。域名后缀与精确匹配两类，三端语义完全对齐。
+- 🎯 **各端唯一差异在 149 条中缀通配的写法** —— Surge 与 Egern 都用 `DOMAIN-WILDCARD`；mihomo 不支持星号内嵌，改写成 `DOMAIN-REGEX`；sing-box 落在 `domain_regex`（同为 Go RE2 正则，转换式与 mihomo 一致）。域名后缀与精确匹配两类，四端语义完全对齐。
 - 🌳 `DOMAIN-SUFFIX` / `domain_suffix` 覆盖整个子域树；误杀用白名单放行。
 - 🧱 仅域名级拦截，同域内嵌广告需 MITM / URL 级规则。
 - ⏭️ 上游 `url_*` / `mitm_skip_domains` 依赖 MITM 上下文，未转换。

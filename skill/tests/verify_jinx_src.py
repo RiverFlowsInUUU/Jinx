@@ -674,11 +674,16 @@ def seg_lineendings(root, rep):
 
 # ---------------------------------------------------------------- 第 10 段
 
-# 平台识别：从**产物文件名**派生清单，不硬编码平台名 ——
-# 将来加第四端时本段自动跟上，不需要改断言（避免"断言比现实慢一拍"）。
+# 平台识别：**显式登记**每个对外支持的客户端名。
+#
+# ⚠️ 为什么不从产物文件名派生：Egern **没有独立产物** —— 它与 Surge 同格式，
+#    直接复用 `surge-*.list`（依据：姊妹仓 Self-Configuration 的四份现役 Egern
+#    profile 全部引用 `Jinx/main/surge-*.list`，并把这两份登记为「共用规则集」）。
+#    从产物派生会让 Egern 永远不被检查 —— 这正是「无产物端的说明最容易漏」。
 PLATFORM_LABEL = {
     'mihomo': ['mihomo'],
     'surge': ['Surge', 'surge'],
+    'egern': ['Egern', 'egern'],
     'singbox': ['sing-box'],
 }
 
@@ -690,17 +695,23 @@ PLATFORM_LABEL = {
 #    或 DetailsReadme 订阅表里删掉两行，断言**照样全绿**，因为别处（接入节、
 #    转换原理表）仍有 "sing-box" 字样。那样的判据等于没判。
 #
-# 每个条目 = (文件, 描述, 判定用的正则模板)。模板用 {name} 占位平台名，
-# 平台名按 PLATFORM_LABEL 取（任一别名命中即算该平台在场）。
+# 每个条目 = (文件, 描述, 定位正则)。
+#
+# ⚠️ 定位正则必须**只依赖「这是一行客户端的清单行」这个事实**，不能依赖单元格
+#    的排版细节（加粗、反引号、几个文件名）—— 实测（2026-10-04）踩过两次：
+#      · 初版 `^\|\s*[^|]+\|\s*`[^`]+`\s*\|` 要求**第二格**是单个反引号词，
+#        Egern 行写成「`a` · `b`」（两个文件名）后**整行不被定位**，
+#        于是"缺 egern"的判负看上去像是误报，实为判据漏掉了该行。
+#      · 加粗版 `^\|\s*\*\*[^|]*\*\*[^|]*\|` 同理，换个排版就失效。
+#    改为**按平台名开头**定位 —— 既稳，又与判据意图（平台是否在场）一致。
+PLATFORM_ROW = r'^\|\s*\**\s*(mihomo|Surge|Egern|sing-box)\b'
 EXTERNAL_POSITIONS = [
     ('README.md', '顶部平台徽章行',
      r'^\[!\[[^\]]*\]\([^)]*img\.shields\.io[^)]*\)\]'),
-    ('README.md', '订阅表「Jinx 规则集」行',
-     r'^\|\s*\*\*[^|]*\*\*[^|]*\|[^\n]*$'),
+    ('README.md', '订阅表「Jinx 规则集」行', PLATFORM_ROW),
     ('README.md', '接入节折叠块标头',
      r'<summary>[^\n]*</summary>'),
-    ('DetailsReadme/DetailsReadme.md', '订阅表行',
-     r'^\|\s*[^|]+\|\s*`[^`]+`\s*\|[^\n]*$'),
+    ('DetailsReadme/DetailsReadme.md', '订阅表行', PLATFORM_ROW),
     ('DetailsReadme/DetailsReadme.md', '转换原理表表头',
      r'^\|\s*上游写法[^\n]*$'),
     ('skill/scripts/upload_to_github.py', '仓库简介默认值（GitHub 页面顶部显示的就是它）',
