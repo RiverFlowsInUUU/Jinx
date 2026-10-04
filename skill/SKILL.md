@@ -372,6 +372,11 @@ python upload_repo.py --token <PAT> --repo <owner>/<name> --message "..." \
 
 ## 踩坑记录
 
+- ⚠️ **`write_text()` 会按平台改行尾 —— 产物因此跨平台不可复现（2026-10-04 实测修复）**：Python 的通用换行转换把 `\n` 写成 `os.linesep`，于是 `pathlib.write_text(text)` 在 **Windows 出 CRLF、Linux 出 LF**。后果是同一个脚本在两平台产出**不同字节**：仓库里 mihomo / Surge 四份产物（Windows 生成）是 CRLF、sing-box 两份是 LF，而 CI 在 Linux 上重跑生成必得 LF → 与仓库内容不符，「产物可复现」断言当场判负。
+  - 修法两条腿，**缺一不可**：① 写出时显式 `write_text(text, encoding='utf-8', newline='')` 钉死 LF（`newline=''` 关闭转换；用 `write_bytes` 亦可）；② 仓根加 `.gitattributes` 声明 `* text=auto eol=lf`，管住检出与提交。只改脚本、仓库内容仍是 CRLF，CI 照样判负；只归一化文件、脚本不改，下次在 Windows 重跑又会写回 CRLF。
+  - 验证：改后重跑生成，与改动前逐字节**归一化行尾**后比对 —— 必须「仅行尾不同、内容零改动」。
+  - 📌 规则集按行解析、客户端都会 trim 行尾，CRLF 与 LF **对功能等价**；这事只为「跨平台产物逐字节可复现」，不改语义。
+
 - **后缀别乱起（三个平台方向不同）**：
   - **mihomo 侧一律 `.yaml`**：`format` 默认就是 `yaml`，文件内容是顶层 `payload` 列表。用 `.list` 会让抄配置的人漏写 `format`（默认按 yaml 解析 → 报错或空规则），或被迫多写一条 `format: text`。社区 mihomo 规则仓库一律 `.yaml` / `.mrs`。
   - **Surge 侧一律 `.list`**：远程 RULE-SET 社区惯例是 `.list`，DOMAIN-SET 常见 `.txt`。`.conf` 是 Surge **主配置文件（profile）专用**，用它会让人误以为是 profile。

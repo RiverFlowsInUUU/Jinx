@@ -349,7 +349,13 @@ def main():
         (names[2], sb_text, sb_total),
     ]
     for name, text, n in outputs:
-        (out / name).write_text(text, encoding='utf-8')
+        # newline='' 关掉 Python 的通用换行转换 —— 否则 write_text 会把 \n
+        # 按平台写成 os.linesep：Windows 出 CRLF、Linux 出 LF，**同一脚本
+        # 跨平台产出不同字节**，产物在 CI（Linux）上重跑必然与 Windows
+        # 提交的版本不一致。显式钉死 LF，产出才可复现。
+        # （实测 2026-10-04：仓库内 mihomo / Surge 四份产物原为 CRLF、
+        #   sing-box 两份为 LF，正是该转换造成的分裂；CI 第 6 段当场判负。）
+        (out / name).write_text(text, encoding='utf-8', newline='')
         print('  %-32s %6d 行' % (name, n))
 
     print('\n分类: exact=%d suffix=%d glob=%d url=%d (其中 %d 条 URL 已还原为 host)'

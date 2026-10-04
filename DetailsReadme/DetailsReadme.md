@@ -141,6 +141,7 @@ Jinx/
 │   ├── 📄 scripts/     # convert_ruleset.py —— 六份产物的唯一生成入口
 │   └── ✅ tests/       # verify_jinx_src.py（9 段断言）· selftest_negative.py（负样本）
 ├── 🔁 .github/         # CI：每次提交自动跑上述两个脚本
+├── 📐 .gitattributes   # 全仓文本 eol=lf（跨平台产物逐字节可复现）
 └── 📁 DetailsReadme/   # 本文档
 ```
 
@@ -172,7 +173,11 @@ Jinx/
 
 📐 编写期该自测当场抓出两个真 bug，留痕备查：① 第 6 段比对时 `--src` 写法差异（ads 线用 `jinx-rules`、white-guard 线用 `./jinx-rules`，**因为它原样进表头**）会被误报成内容差异；② emoji 判定把 `U+2B00-2BFF` 整段当箭头排除，而 `U+2B50`（五角星形符号）正住在那段里 —— 导致句中 emoji 静默漏报。
 
-📏 **已知不统一（不影响功能，未纳入本次改动）**：mihomo / Surge 四份产物在仓库内存的是 CRLF，sing-box 两份 JSON 与全部手写文件是 LF。根因是产物由脚本在 Windows 上写出、仓库又缺 `.gitattributes`。各客户端按行解析并 trim 行尾，故无功能影响；第 9 段只做同族一致性与事实播报，不判负。要彻底统一需加 `.gitattributes` + 重跑生成，属独立改动。
+📏 **行尾统一（2026-10-04 修复）**：产物此前在仓库内**行尾分裂** —— mihomo / Surge 四份是 CRLF、sing-box 两份是 LF。根因是 `convert_ruleset.py` 用 `write_text(text)` 写出，而 Python 的通用换行转换会把 `\n` 按平台写成 `os.linesep`：**Windows 出 CRLF、Linux 出 LF，同一脚本跨平台产出不同字节**。这导致 CI 在 Linux 上重跑生成必得 LF、与仓库内的 CRLF 不符，第 6 段当场判负。
+
+处置两条腿，缺一不可：① 脚本改为 `write_text(..., newline='')` 显式钉死 LF（根治产出）；② 新增 `.gitattributes` 声明全仓文本 `eol=lf`（根治检出与提交）。六份产物已按新脚本重跑，**仅行尾变化、内容零改动**（逐字节归一化比对验证）。
+
+📌 规则集按行解析、客户端都会 trim 行尾，故 CRLF 与 LF 对功能等价 —— 归一化只为「跨平台产物逐字节可复现」这一工程目标，不改任何语义。
 
 ---
 

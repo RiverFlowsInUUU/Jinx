@@ -1,0 +1,31 @@
+# 行尾归一化 —— 消除「同一产物在两平台字节不同」的隐患。
+#
+# 背景（2026-10-04 实测）：convert_ruleset.py 原用 write_text(text) 写出，
+# 而 Python 的通用换行转换会把 \n 按平台写成 os.linesep —— Windows 出 CRLF、
+# Linux 出 LF。结果是：仓库内 mihomo / Surge 四份产物是 CRLF、sing-box 两份
+# 是 LF（分裂），且 CI 在 Linux 上重跑生成必得 LF，与仓库内容不符 → 第 6 段
+#「产物可复现」判负。
+#
+# 处置是两条腿：① 脚本改为 newline='' 显式写 LF（根治产出）；② 本文件声明
+# 全仓文本一律 LF（根治检出与提交），二者缺一不可。
+#
+# ⚠️ 规则集文件按行解析、客户端都会 trim 行尾，故 CRLF 与 LF **对功能等价**；
+#    归一化只为「跨平台产物逐字节可复现」这一工程目标，不改任何语义。
+
+# 默认：所有文本按 LF 存取（含 Windows 上的检出）
+* text=auto eol=lf
+
+# 二进制/无需处理
+*.png binary
+*.jpg binary
+*.ico binary
+*.srs binary
+
+# 显式声明文本类型，避免被识别成二进制（扩大匹配面）
+*.md    text eol=lf
+*.list  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.py    text eol=lf
+*.txt   text eol=lf
