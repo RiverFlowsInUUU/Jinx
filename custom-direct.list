@@ -26,5 +26,14 @@
 #                 经确认取「后缀语义」一解（另一解「任何以 wechatos.net 开头的域名」需用
 #                 DOMAIN-KEYWORD，范围更宽，本次不采用）。
 #
+# *.za.group      众安银行 App（ZA Bank）业务域。2026-10-10 实测，用户指定放行。
+#                 现象：App 的 bankappgw.za.group 落进兜底规则走了境外代理，登录 / 刷新 /
+#                 查余额一直转圈；而图片与静态资源（cdn.zaticdn.com 已在直连集）正常。
+#                 根因：上游直连集（Loyalsoldier direct.txt 与 Jinx 白名单）都没收录 za.group ——
+#                 同族的 zainvest.group / zafinsvc.com / zajourney.com / zaticdn.com 上游均已放行，
+#                 只有 za.group 一族漏网。实测大陆可直连、未被墙，故在此强制直连。
+#                 📌 上游收录后可删本条（产物由生成链同步，无需手改）。
+#
 *.tange365.com
 *.wechatos.net
+*.za.group

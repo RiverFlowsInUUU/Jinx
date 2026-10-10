@@ -82,8 +82,8 @@ def _(w):
     """把订阅表里某个文件的条数改错。
 
     兼容两种合法表格形态（见 verify_jinx_src.py 第 5 段）：
-      A 独立单元格： | `f` | 44 |
-      B 内嵌链接：   [`f`](URL) `44`
+      A 独立单元格： | `f` | 45 |
+      B 内嵌链接：   [`f`](URL) `45`
     两种都试，确保本负样本在版式演进后依然有效。
     实测教训（2026-10-04）：只匹配形态 A 时，README 改成形态 B 后本负样本
     静默失效（改不动文件 → 断言自然不报错 → 被误读成「漏报」）。
@@ -92,10 +92,10 @@ def _(w):
     t = p.read_text(encoding='utf-8')
     for old, new in [
         ('[`surge-direct.list`](https://raw.githubusercontent.com/'
-         'RiverFlowsInUUU/Jinx/main/surge-direct.list) `44`',
+         'RiverFlowsInUUU/Jinx/main/surge-direct.list) `45`',
          '[`surge-direct.list`](https://raw.githubusercontent.com/'
          'RiverFlowsInUUU/Jinx/main/surge-direct.list) `50`'),
-        ('| `surge-direct.list` | 44 |', '| `surge-direct.list` | 50 |'),
+        ('| `surge-direct.list` | 45 |', '| `surge-direct.list` | 50 |'),
     ]:
         if old in t:
             t = t.replace(old, new)
@@ -188,9 +188,9 @@ def _(w):
     """
     p = w / 'README.md'
     t = p.read_text(encoding='utf-8')
-    old = '| ✅ 放行 | **44 条** |'
+    old = '| ✅ 放行 | **45 条** |'
     assert old in t, '负样本失效：能力矩阵的放行行已改版'
-    p.write_text(t.replace(old, '| 🛡️ 放行 | **44 条** |', 1), encoding='utf-8')
+    p.write_text(t.replace(old, '| 🛡️ 放行 | **45 条** |', 1), encoding='utf-8')
 
 
 def main():

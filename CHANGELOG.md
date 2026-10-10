@@ -4,6 +4,21 @@
 
 ---
 
+## 2026-10-10（六）· 规则：白名单新增 `*.za.group`
+
+> 📌 本日第一条。上游数据仍固定在 `3.1.9` 快照，未随本次改动漂移。
+
+**变更**
+
+- 🛡️ **白名单 44 → 45 条：新增 `*.za.group`** —— 众安银行 App（ZA Bank）业务域，2026-10-10 实测 + 用户指定放行，语义为 `za.group` 及其全部子域（如 `bankappgw.za.group` / `bank.za.group`），三平台落点分别为 `DOMAIN-SUFFIX,za.group`（mihomo / Surge）与 `domain_suffix: ["za.group"]`（sing-box）。经 `custom-direct.list` 的 `--extra-white` 通道并入，追加在 guard 过滤之后、不参与碰撞裁剪。
+  - 🔍 **现象**：大陆使用懒人版时 App 的 `bankappgw.za.group:443` 落进兜底规则走境外代理，登录 / 刷新 / 查余额一直转圈；图片与静态资源正常（`cdn.zaticdn.com` 上游已在直连集）。
+  - 🧩 **根因**：上游直连集（Loyalsoldier `direct.txt` 与 Jinx 白名单）均未收录 `za.group`；同族的 `zainvest.group` / `zafinsvc.com` / `zajourney.com` / `zaticdn.com` 上游都已放行，**只有 `za.group` 一族漏网**。实测大陆可直连、未被墙，故在本仓手工补直连，等上游收录后再删本条。
+  - 📐 三份产物同一次重跑生成，条数 45 / 45 / 45 一致；`sing-box` 侧字段构成 `domain=41 domain_suffix=4`（原 3 项 + 本次 1 项）。
+  - ✅ **验收（对 diff）**：与改动前对拍，**只出现三处允许的变化** —— 表头 `# entries: 44 → 45`、`# extra-white: custom-direct.list(2) → (3)`、末尾按顺序多出 1 条 `DOMAIN-SUFFIX,za.group`；其余正文**逐行不变**（既有 44 条逐字节相同；sing-box JSON 仅 `domain_suffix` 数组末尾追加 1 项）。README 与 `DetailsReadme` 的条数声明同步 44 → 45，`skill/SKILL.md` 预期读数与 `selftest_negative.py` 的条数锚点一并更新。
+  - 📌 **上游快照未动**：本次重跑固定在上游 `3.1.9`（commit `3fd15f94`）—— 改前已先验证「用该版本重跑，六份产物与仓库既有文件逐字节一致」，故本次 diff 不含任何上游漂移（上游现已是 `3.2.1`）。
+
+---
+
 ## 2026-10-04（四）· 改名：`*-white-guard.*` → `*-direct.*`
 
 > 📌 本日第四条。**规则内容零改动** —— 三份产物逐字节比对，与新名前完全一致。

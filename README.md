@@ -16,7 +16,7 @@
 [![CI](https://github.com/RiverFlowsInUUU/Jinx/actions/workflows/ci.yml/badge.svg)](https://github.com/RiverFlowsInUUU/Jinx/actions/workflows/ci.yml)
 
 [![Ads](https://img.shields.io/badge/%E6%8B%A6%E6%88%AA-3889%20%E6%9D%A1-0969da?style=flat-square)](#-订阅)
-[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-44%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
+[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-45%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
 [![AWAvenue](https://img.shields.io/badge/%E7%A7%8B%E9%A3%8E-965%20%E6%9D%A1-f9c513?style=flat-square)](#-订阅)
 
 </div>
@@ -43,9 +43,9 @@
 
 | <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">✅ 放行规则集</div> |
 |:--|:--|:--|
-| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-direct.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml) `44` |
-| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-direct.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list) `44` |
-| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-direct.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-direct.json) `44` |
+| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-direct.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml) `45` |
+| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-direct.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list) `45` |
+| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-direct.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-direct.json) `45` |
 
 📌 表内链接指向 **Raw GitHub**（首选源）。要换成 jsDelivr 备用源，把
 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/` 即可。
@@ -74,7 +74,7 @@
 | <div align="center">维度</div> | <div align="center">Jinx 规则集</div> | <div align="center">说明</div> |
 |:--|:--|:--|
 | 🚫 拦截 | **3889 条** | 3740 条域名后缀 + 149 条中缀通配 |
-| ✅ 放行 | **44 条** | 41 条精确 + 3 条后缀（含 2 条手工补充） |
+| ✅ 放行 | **45 条** | 41 条精确 + 4 条后缀（含 3 条手工补充） |
 | 🧩 各端一致 | **逐条等价** | mihomo / Surge / Egern / sing-box 归一化后零差异 |
 | 🎯 增删 | **一条不增不减** | 只做格式转换，不改上游判定 |
 | 🔄 可复现 | **逐字节一致** | 产物 == 源头重跑结果，CI 对拍 |

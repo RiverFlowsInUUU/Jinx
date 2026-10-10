@@ -1,8 +1,8 @@
 # auto-converted by adblock-ruleset-port
 # source: ./jinx-rules
 # mode: exact
-# entries: 44
-# extra-white: custom-direct.list(2)
+# entries: 45
+# extra-white: custom-direct.list(3)
 DOMAIN,zlink.ugsdk.cn
 DOMAIN,praisewindow.ugsdk.cn
 DOMAIN,cactus.jd.com
@@ -47,3 +47,4 @@ DOMAIN,seeds-sina.xycdn.com
 DOMAIN-SUFFIX,wagbridge.alsc-prd.tanx.com
 DOMAIN-SUFFIX,tange365.com
 DOMAIN-SUFFIX,wechatos.net
+DOMAIN-SUFFIX,za.group
