@@ -252,10 +252,20 @@ def _(w):
 
     ⚠️ 锚定 version.json 自述值而非源文件本身：自述值是上游官方对
     本快照的承诺，改动它才能制造「快照完整性」分歧。
+
+    ⚠️ 2026-10-10 修正：原写 `d['domainBlacklistCount'] += 1`，隐含假设
+    「源文件是干净的」——若工作区恰好也给 blacklist 追加过行（演练时就这么发生了），
+    两边同时 +1 又变得相等，样本静默变成空操作（漏报）。现在改为**从副本仓
+    实际数出条数再 +1**，无论副本仓是什么状态都保证分歧存在。
     """
-    p = w / 'jinx-rules' / 'version.json'
+    src = w / 'jinx-rules'
+    actual = sum(1 for line in (src / 'blacklist.txt').read_text(encoding='utf-8').splitlines()
+                 if line.strip() and not line.strip().startswith('#'))
+    actual += sum(1 for line in (src / 'blacklist_wildcard.txt').read_text(encoding='utf-8').splitlines()
+                  if line.strip() and not line.strip().startswith('#'))
+    p = src / 'version.json'
     d = json.loads(p.read_text(encoding='utf-8'))
-    d['domainBlacklistCount'] += 1
+    d['domainBlacklistCount'] = actual + 1
     p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
@@ -264,6 +274,27 @@ def main():
         print(f'❌ 前置不达标：找不到 {TARGET}')
         return 2
     print(f'被检脚本: {TARGET}')
+
+    # 前置：副本仓本身必须先跑绿。负样本自测是**相对**断言 ——
+    # 它验证的是「破坏 O 后闸门能抓到」，前提是「不破坏时闸门是绿的」。
+    # 若工作区已经处于脏状态（例如调试时往 jinx-rules/ 追加了一行），
+    # 每条负样本都会在“已经红”的底子上运行，结果既可能假绿也可能假红，
+    # 自测结论完全不可信。2026-10-10 演练时就撞上过这个陷阱。
+    # 宁可拒绝出结论（退出码 2），也不给一个看似跑过的假绿。
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp) / 'repo'
+        shutil.copytree(ROOT, base, ignore=shutil.ignore_patterns('.git', '__pycache__', '_regen'))
+        proc = subprocess.run(
+            [sys.executable, str(TARGET), '--root', str(base)],
+            capture_output=True, text=True, encoding='utf-8', errors='replace')
+        if proc.returncode != 0:
+            print(f'❌ 前置不达标：副本仓本身就没跑绿（exit={proc.returncode}），'
+                  '负样本自测在非绿基线上无意义。')
+            print('   先让 `python skill/tests/verify_jinx_src.py` 在仓根回到 0，再跑本自测。')
+            tail = [l for l in (proc.stdout or '').splitlines() if '❌' in l][:5]
+            for l in tail:
+                print('   ' + l.strip())
+            return 2
     print(f'负样本数: {len(CASES)}\n')
 
     caught = missed = 0

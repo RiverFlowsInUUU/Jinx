@@ -187,6 +187,12 @@ python skill/tests/verify_jinx_src.py          # 12 段 · 68 项断言，与 CI
 python skill/tests/selftest_negative.py        # 负样本：证明闸门本身能抓错
 ```
 
+⚠️ **`selftest_negative.py` 要求先有绿基线。** 它是**相对**断言 —— 验证的是「破坏 O 后
+闸门能抓到」，隐含前提是「不破坏时闸门是绿的」。假设前工作区已经脏（例如你刚往
+`jinx-rules/` 追加了一行调试），每条负样本都会在「已经红」的底子上跑，结论既可能假绿
+也可能假红。此时脚本**拒绝出结论并对 `exit=2`**（不借 0 蒙混）。先让
+`python skill/tests/verify_jinx_src.py` 在仓根回到 `0`，再跑它。
+
 `verify_jinx_src.py` 守的正是本仓的立仓之本「规则一条不增不减」，覆盖十二段：
 产品存在性 · 三格式条数一致 · **跨格式逐条语义等价**（不是只比条数）· 表头自述 ·
 文档声明（README / DetailsReadme）· **文档声明的上游版本号**（5b，防「条数对了、

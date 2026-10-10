@@ -422,6 +422,11 @@ def seg_upstream_pin(root, rep, counts, repro_failed=0):
     第 6 段依然能全绿（源与产物彼此自洽，只是两者都不可信），而本段能发现
     本地根本不具备一份完整快照，因而没资格跟上游对齐。
 
+    ⚠️ 这条判据**无论第 6 段是否已判负都要执行**。2026-10-10 曾写成
+    「第 6 段判负则本条跳过」，结果在最需要它的场景（上游滚动、产物未重跑）
+    失效，并使负样本「残缺上游快照」漏报。`repro_failed` 只用于附一句
+    同因提示，**不改变任何 judge 的结论**。
+
     下面两条「合并基线 ads/direct」的计数断言，逻辑上被第 6 段蕴含
     （能重跑出一致结果则条数必然一致）；保留它是为了在第 6 段判负时
     把「应有几条」显式写出来，让失败原因一眼可读，不是新增一盘守卫。
@@ -461,21 +466,26 @@ def seg_upstream_pin(root, rep, counts, repro_failed=0):
     # 独立于第 6 段的判据：它是「本地源确实是一份完整上游快照」的凭据。
     # 源被手工裁过 / 只取到半个快照时，下面的「应有条数」本身就不可信，
     # 产物与它相符也证明不了任何事。
-    if repro_failed:
-        rep.judge(True, 'pin',
-                  f'（提示）第 6 段已判负 {repro_failed} 项，本条自述计数判负与它同因')
-    else:
-        for field, label, actual in (
-                ('domainBlacklistCount', 'blacklist', blk),
-                ('domainWhitelistCount', 'whitelist', len(wl_src))):
-            declared = ver.get(field)
-            rep.judge(declared == actual, 'pin',
-                      f'上游计数自述 {label}: version.json {declared} == 源文件实际 {actual}'
-                      if declared == actual else
-                      f'上游计数自述 {label}: version.json {declared} != 源文件实际 {actual}',
-                      '本地 jinx-rules/ 与上游官方声明不符 —— 源可能被手工裁过、'
-                      '只取到半个快照、或残留了旧文件。此时「合并基线」结论不可信：'
-                      '先完整重取上游源（见 SKILL.md「上游滚动时的标准流程」）')
+    #
+    # ⚠️ 2026-10-10 修正：此处原先写成「第 6 段已判负则本条直接判过（只打提示）」
+    #    —— 本意是让失败原因可读，实际却把本段唯一独立判据变成了摆设，
+    #    而且恰恰是在**最需要它工作的时刻**失效：演练「上游滚动、产物未重跑」时
+    #    第 6 段判负 → 本条被跳过 → `selftest_negative.py` 的「残缺上游快照」
+    #    样本开始漏报（11 抓到 / 1 漏报）。教训：与失败缘由相关的只是**提示文案**，
+    #    不能拿它当跳过判据的理由 —— 提示可以附，判据必须跑。
+    hint = (f'（注：第 6 段已判负 {repro_failed} 项，本条判负常与它同因）'
+            if repro_failed else '')
+    for field, label, actual in (
+            ('domainBlacklistCount', 'blacklist', blk),
+            ('domainWhitelistCount', 'whitelist', len(wl_src))):
+        declared = ver.get(field)
+        rep.judge(declared == actual, 'pin',
+                  (f'上游计数自述 {label}: version.json {declared} == 源文件实际 {actual}'
+                   if declared == actual else
+                   f'上游计数自述 {label}: version.json {declared} != 源文件实际 {actual}'),
+                  '本地 jinx-rules/ 与上游官方声明不符 —— 源可能被手工裁过、'
+                  '只取到半个快照、或残留了旧文件。此时「合并基线」结论不可信：'
+                  '先完整重取上游源（见 SKILL.md「上游滚动时的标准流程」）' + hint)
 
     customs = {'ads': entries_list('custom-ads.list'),
                'direct': entries_list('custom-direct.list')}
