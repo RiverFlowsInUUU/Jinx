@@ -17,13 +17,20 @@
   python skill/tests/verify_jinx_src.py          # 在仓根执行
   python skill/tests/verify_jinx_src.py --root . # 显式指定仓根
 
-断言清单（9 段）:
+断言清单（12 段，执行顺序）:
   1. 六份产物存在且非空
   2. 三格式条数一致（ads 三份互等 / direct 三份互等）
   3. 跨格式语义等价（归一化后逐条比对，不是只比条数）
   4. 文件头 # entries 自述 == 实际条数
   5. 文档声明的条数 == 文件实际条数（README / DetailsReadme）
+ 5b. 文档声明的**上游版本号与快照日期** == jinx-rules/version.json
+     （2026-10-10 新增：旧版闸门只看条数，于是「条数全对、徽章写着上一个
+      上游版本」可以全绿 —— 读者看到的上游版本是假的。）
   6. 产物 == 源头重跑生成的结果（防手改产物 / 防改了源头忘了重跑）
+ 6b. 合并基线自检：version.json 自述计数 == 源文件实际（挡「本地源被裁过 /
+     只取到半个快照」），并显式列出产物与上游应有的条数。
+     ⚠️ 本段**不是**「拿旧版合并」的守卫 —— 那是一条政策，靠 SKILL.md
+     「上游滚动时的标准流程」与 sync_docs.py 的写侧门禁执行，详见该节。
   7. 源头文件（custom-*.list）的表头 extra 声明与实际条数一致
   8. 文案规范：emoji 只出现在行首 + 密度下限
   9. 行尾符与 BOM（BOM 硬判负；行尾只做同族一致性与事实播报）
@@ -33,7 +40,9 @@
      否则带 U+FE0F 的那个会占两格、该行在宽字符字体下错位。
 
 闸门自身可信度由 skill/tests/selftest_negative.py 保证：它在临时副本仓里
-制造 6 种典型错误，要求本脚本逐一判负 —— 防止闸门退化成「永远绿的空操作」。
+制造 12 种典型错误，要求本脚本逐一判负 —— 防止闸门退化成「永远绿的空操作」。
+其中每条负样本都经过「拆掉对应判据后必须翻红」的独立性反证，确保它是真的在
+测那一盘守卫，而不是靠另一次判负顺带被「抓到」。
 
 第 8 段的 emoji 判定按「emoji 之前只许出现结构字符（标题 / 列表 / 引用标记、
 表格竖线、`[`、树形框线、缩进）」—— 这条口径来自 2026-09-22 用户要求，
@@ -389,7 +398,162 @@ def seg_doc_counts(root, rep, counts):
         rep.judge(False, 'doc', 'DetailsReadme/DetailsReadme.md 缺失', '下沉文档必须存在')
 
 
-def seg_reproducible(root, rep):
+def seg_upstream_pin(root, rep, counts, repro_failed=0):
+    """合并基线自检：本地上游快照完整，且产物条数与它吻合。
+
+    【诚实说明本段的边界 —— 不要把它当成多于它实际所是的守卫】
+
+    2026-10-10 的事故链路是：上游从 3.1.9 滚到 3.2.1，而我拿 3.1.9 的源
+    去合并个人规则。事后看，**这一步本身已经会让第 6 段判红**（源与产物
+    不符 —— CI 当时确实红了）；真正的错在于我看到红之后的反应：
+    不是拉新上游，而是把本地源钉回旧版本让红变绿。
+
+    也就是说：「拿旧版合并」不是一种可被静态检查的状态，而是**一条政策**：
+    「遇到红不许退回旧版，只能前进到新版」。政策不能靠断言执行，
+    它靠三件事固定下来：
+
+      1. `sync_docs.py` 拒绝在「产物与上游不同步」时改文档（写侧门禁）；
+      2. `skill/SKILL.md` 写明「上游滚动时的标准流程」（人的参照）；
+      3. 即本段 —— 把「本地源到底是不是一份完整上游快照」变成可判定的。
+
+    本段**独立于第 6 段**的判据只有一条：`version.json` 自述的
+    `domainBlacklistCount` / `domainWhitelistCount` 必须等于源文件实际条数。
+    它的价值是挡住「本地源被裁过 / 只取到半个快照 / 过期残留」——这时
+    第 6 段依然能全绿（源与产物彼此自洽，只是两者都不可信），而本段能发现
+    本地根本不具备一份完整快照，因而没资格跟上游对齐。
+
+    下面两条「合并基线 ads/direct」的计数断言，逻辑上被第 6 段蕴含
+    （能重跑出一致结果则条数必然一致）；保留它是为了在第 6 段判负时
+    把「应有几条」显式写出来，让失败原因一眼可读，不是新增一盘守卫。
+    """
+    rep.section('6b. 合并基线 == 上游最新版（不许拿旧版合并）')
+    src = root / 'jinx-rules'
+    if not (src / 'version.json').is_file():
+        rep.judge(False, 'pin', '缺 jinx-rules/version.json —— 无法判定合并基线',
+                  '先取上游源文件（见 SKILL.md「上游滚动时的标准流程」）；'
+                  '未验证 ≠ 绿')
+        return
+
+    ver = json.loads((src / 'version.json').read_text(encoding='utf-8'))
+    version, date = ver['version'], ver['lastUpdate'][:10]
+
+    def entries(name):
+        n = 0
+        for line in (src / name).read_text(encoding='utf-8').splitlines():
+            s = line.strip()
+            if s and not s.startswith('#'):
+                n += 1
+        return n
+
+    def entries_list(name):
+        out = []
+        for line in (root / name).read_text(encoding='utf-8').splitlines():
+            s = line.strip()
+            if s and not s.startswith('#'):
+                out.append(s)
+        return out
+
+    blk = entries('blacklist.txt') + entries('blacklist_wildcard.txt')
+    wl_src = (entries_list('jinx-rules/whitelist.txt')
+              + entries_list('jinx-rules/whitelist_wildcard.txt'))
+
+    # (a) version.json 的官方计数必须与源文件实际条数吻合。本段唯一
+    # 独立于第 6 段的判据：它是「本地源确实是一份完整上游快照」的凭据。
+    # 源被手工裁过 / 只取到半个快照时，下面的「应有条数」本身就不可信，
+    # 产物与它相符也证明不了任何事。
+    if repro_failed:
+        rep.judge(True, 'pin',
+                  f'（提示）第 6 段已判负 {repro_failed} 项，本条自述计数判负与它同因')
+    else:
+        for field, label, actual in (
+                ('domainBlacklistCount', 'blacklist', blk),
+                ('domainWhitelistCount', 'whitelist', len(wl_src))):
+            declared = ver.get(field)
+            rep.judge(declared == actual, 'pin',
+                      f'上游计数自述 {label}: version.json {declared} == 源文件实际 {actual}'
+                      if declared == actual else
+                      f'上游计数自述 {label}: version.json {declared} != 源文件实际 {actual}',
+                      '本地 jinx-rules/ 与上游官方声明不符 —— 源可能被手工裁过、'
+                      '只取到半个快照、或残留了旧文件。此时「合并基线」结论不可信：'
+                      '先完整重取上游源（见 SKILL.md「上游滚动时的标准流程」）')
+
+    customs = {'ads': entries_list('custom-ads.list'),
+               'direct': entries_list('custom-direct.list')}
+
+    # 白名单里会被黑名单误杀的部分（guard 裁掉），需要与转换脚本同源判定
+    sys.path.insert(0, str(root / 'skill' / 'scripts'))
+    from convert_ruleset import build_blacklist_matcher  # noqa: E402
+    collides = build_blacklist_matcher(
+        [str(src / 'blacklist.txt')], [str(src / 'blacklist_wildcard.txt')])
+    kept = sum(1 for e in wl_src if collides(e))
+
+    want = {'ads': blk + len(customs['ads']), 'direct': kept + len(customs['direct'])}
+    for fam in ('ads', 'direct'):
+        real = counts[fam]['mihomo']
+        rep.judge(real == want[fam], 'pin',
+                  f'合并基线 {fam}: 产物 {real} == 上游 {version} 应有 {want[fam]}'
+                  if real == want[fam] else
+                  f'合并基线 {fam}: 产物 {real} != 上游 {version}（{date}）应有 {want[fam]}',
+                  '产物不是用上游最新版生成的 —— 拿旧版本合并会丢掉上游这段'
+                  '时间的规则更新（上游新增的拦截域会静默消失）。\n'
+                  '修正：重取上游源 → 重跑两条生成命令 → 重跑 sync_docs.py '
+                  '推平文档读数 → 再跑本闸门。')
+
+
+def seg_upstream_doc(root, rep):
+    """文档里声明的上游版本号/快照日期必须等于 jinx-rules/version.json。
+
+    2026-10-10 新增。此前闸门只校验**条数**，从不看版本号 —— 于是出现过
+    「产物与条数都是新版，但 README 徽章 / 快照行 / 页脚还写着旧版本」，
+    读者看到的上游版本是错的，而全部门禁全绿。
+    """
+    rep.section('5b. 文档声明的上游版本号 == 上游实际')
+    vpath = root / 'jinx-rules' / 'version.json'
+    if not vpath.is_file():
+        rep.judge(False, 'ver', '缺 jinx-rules/version.json —— 无法校验文档版本号',
+                  '先取上游源文件；未验证 ≠ 绿')
+        return
+    ver = json.loads(vpath.read_text(encoding='utf-8'))
+    version, date = ver['version'], ver['lastUpdate'][:10]
+
+    targets = [
+        ('README.md', 'README Source 徽章',
+         r'badge/Source-Jinx%20([0-9][0-9.]*)', version),
+        ('README.md', 'README 上游快照行',
+         r'\| 📌 上游快照 \| `([0-9][0-9.]*)` · `(\d{4}-\d{2}-\d{2})` \|', (version, date)),
+        ('README.md', 'README 页脚上游行',
+         r'\| 📄 上游 \| .*?数据 `([0-9][0-9.]*)` · `(\d{4}-\d{2}-\d{2})` \|', (version, date)),
+        ('DetailsReadme/DetailsReadme.md', 'Details 页脚上游行',
+         r'\| 📦 上游 \| .*?数据 `([0-9][0-9.]*)` · `(\d{4}-\d{2}-\d{2})` \|', (version, date)),
+    ]
+    for rel, label, pattern, want in targets:
+        p = root / rel
+        if not p.is_file():
+            rep.judge(False, 'ver', f'{label}: {rel} 缺失', '对外文档必须存在')
+            continue
+        text = p.read_text(encoding='utf-8')
+        m = re.search(pattern, text)
+        if not m:
+            rep.judge(False, 'ver', f'{label}: 锚点未命中（版式变了？）',
+                      '文档版式变更后须同步更新 verify_jinx_src.py 与 sync_docs.py 的锚点')
+            continue
+        got = m.group(1) if isinstance(want, str) else m.group(1, 2)
+        ok = (got == want) if isinstance(want, str) else (tuple(got) == tuple(want))
+        rep.judge(ok, 'ver',
+                  f'{label}: {got} == {want}'
+                  if ok else f'{label}: 声明 {got} != 上游实际 {want}',
+                  '文档是上游版本的门面读数，写错就是让读者以为在用旧版（或新版）')
+
+    sk = root / 'skill' / 'SKILL.md'
+    if sk.is_file():
+        m = re.search(r'预期读数：`ads (\d+)` / `direct (\d+)`', 
+                      sk.read_text(encoding='utf-8'))
+        rep.judge(bool(m), 'ver', 'SKILL 预期读数行可解析' if m else
+                  'SKILL 预期读数行未命中（版式变了？）',
+                  'SKILL.md 第 123 行是自测读数的参照，锚点失效则后续判断失真')
+
+
+def seg_reproducible(root, rep, counts=None):
     """产物 == 源头重跑的结果。这是「产物是生成物、不是手改物」的最终判据。
 
     需要上游源文件（jinx-rules/）与脚本。缺源文件时判 SKIP（未验证 ≠ 绿），
@@ -868,7 +1032,10 @@ def run(root):
     seg_cross_format(root, rep)
     seg_header_selfcount(root, rep, counts)
     seg_doc_counts(root, rep, counts)
-    repro = seg_reproducible(root, rep)
+    seg_upstream_doc(root, rep)
+    repro = seg_reproducible(root, rep, counts)
+    repro_failed = len([r for r in rep.rows if r[0] is False and r[1] == 'repro'])
+    seg_upstream_pin(root, rep, counts, repro_failed=repro_failed)
     seg_source_headers(root, rep, counts)
     seg_style(root, rep)
     seg_lineendings(root, rep)

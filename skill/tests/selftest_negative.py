@@ -193,6 +193,72 @@ def _(w):
     p.write_text(t.replace(old, '| 🛡️ 放行 | **47 条** |', 1), encoding='utf-8')
 
 
+@case('半同步：上游源前进了但产物没重跑（拿旧版合并）', '重跑结果与仓库文件')
+def _(w):
+    """模拟「拿上游旧版本合并」：上游源又发了新规则，产物却还是旧的。
+
+    ⚠️ **诚实记录本样本的实际判别力**：它通常被第 6 段（产物可复现）
+    抓到，而非 6b 段 —— 因为「产物与源不符」对第 6 段而言是直接可见的。
+    这正是 2026-10-10 我看到的那个红：**问题不在于红没出现，而在于我
+    选择把本地源钉回旧版本让红变绿**。「拿旧版合并」是一条政策违反，
+    不是一种静态状态，故本样本守的是「这条链路上的红确实会被报出来」，
+    而不是「6b 能独立识别它」（6b 在有源变动时也会同时报 6b 条数不符）。
+    真正只有 6b 能抓的是上面那条「残缺上游快照」样本。
+
+    故 expect 取第 6 段失败时才出现的文案，不取段标题。
+    """
+    src = w / 'jinx-rules' / 'blacklist.txt'
+    assert src.is_file(), '负样本失效：临时仓里没有 jinx-rules/，无法制造半同步'
+    src.write_text(src.read_text(encoding='utf-8') + 'selftest-half-sync.example.com\n',
+                   encoding='utf-8')
+
+
+@case('文档版本号漂移：README 徽章写回旧上游版本（第 5b 段）',
+      '声明 0.0.0 != 上游实际')
+def _(w):
+    """把 README 的 Source 徽章改成一个不是当前上游的版本号。
+
+    旧闸门只校验**条数**，从不看版本号 ⇒ 这种漂移全绿。读者看到的
+    「Source-Jinx 3.1.9」是假读数，而且产物其实已经是新版。
+
+    ⚠️ expect 用失败时才出现的文案，不能用段标题（段标题通过与否都会打印，
+    拿它当关键词会让样本永远“抓到”，即使判据已被改坏）。
+
+    ⚠️ 版本号动态从 version.json 读，不硬编码 —— 否则上游每次滚动
+    本负样本都要跟着改，很容易变成一条“忘了维护所以静默通过”的假绿。
+    """
+    import re
+    p = w / 'README.md'
+    t = p.read_text(encoding='utf-8')
+    ver = json.loads((w / 'jinx-rules' / 'version.json').read_text(
+        encoding='utf-8'))['version']
+    pat = r'badge/Source-Jinx%20' + re.escape(ver)
+    assert re.search(pat, t), '负样本失效：README Source 徽章里没有当前上游版本号'
+    p.write_text(re.sub(pat, 'badge/Source-Jinx%200.0.0', t, count=1),
+                 encoding='utf-8')
+
+
+@case('残缺上游快照：version.json 自述计数与源文件不符（第 6b 段）',
+      '!= 源文件实际')
+def _(w):
+    """只改动 version.json 的自述计数，让它与源文件实际对不上。
+
+    这是**只有 6b 段能抓到**的一类错误（6 段的独立性反证就靠本样本）：
+    它模拟的是「本地 jinx-rules/ 不是一份完整/可信任的上游快照」——
+    比如手工裁过、只取到半个快照、或混入了上一个版本的残留文件。
+
+    此时产物与源彼此“自洽”，第 6 段重跑可以全绿，但**两个东西都不可信**；
+    若拿这份源去同步文档，读者看到的版本号与条数都是错的。
+
+    ⚠️ 锚定 version.json 自述值而非源文件本身：自述值是上游官方对
+    本快照的承诺，改动它才能制造「快照完整性」分歧。
+    """
+    p = w / 'jinx-rules' / 'version.json'
+    d = json.loads(p.read_text(encoding='utf-8'))
+    d['domainBlacklistCount'] += 1
+    p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+
 def main():
     if not TARGET.is_file():
         print(f'❌ 前置不达标：找不到 {TARGET}')
@@ -204,8 +270,11 @@ def main():
     for label, expect, sabotage in CASES:
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp) / 'repo'
+            # jinx-rules/ 也要复制：第 5b / 6b 段要读它断言「合并基线 == 上游最新」。
+            # 若在这里排除它，两道新断言会因「缺源文件」对所有负样本一律判负，
+            # 于是每条负样本都能“抓到”，自测就不再能区分真假 —— 等于自测空转。
             shutil.copytree(ROOT, work,
-                            ignore=shutil.ignore_patterns('.git', 'jinx-rules',
+                            ignore=shutil.ignore_patterns('.git',
                                                           '__pycache__', '_regen'))
             sabotage(work)
             proc = subprocess.run(
