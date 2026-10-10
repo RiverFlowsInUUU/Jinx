@@ -1,8 +1,10 @@
 # auto-converted by adblock-ruleset-port
 # source: ./jinx-rules
 # mode: exact
-# entries: 45
+# entries: 47
 # extra-white: custom-direct.list(3)
+DOMAIN,gm.mmstat.com
+DOMAIN,wgo.mmstat.com
 DOMAIN,zlink.ugsdk.cn
 DOMAIN,praisewindow.ugsdk.cn
 DOMAIN,cactus.jd.com

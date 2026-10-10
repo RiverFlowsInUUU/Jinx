@@ -1,7 +1,7 @@
 # auto-converted by adblock-ruleset-port
 # source: jinx-rules
 # mode: suffix
-# entries: 3889
+# entries: 3901
 # extra: custom-ads.list(1)
 DOMAIN-SUFFIX,1500020991.vodplayer.wxamedia.com
 DOMAIN-SUFFIX,1500022744.vodplayer.wxamedia.com
@@ -1117,13 +1117,11 @@ DOMAIN-SUFFIX,image.uczzd.cn
 DOMAIN-SUFFIX,inews.gtimg.com.sched.legopic2-dk.tdnsv6.com
 DOMAIN-SUFFIX,ios.rqd.qq.com
 DOMAIN-SUFFIX,live-ad.jd.com
-DOMAIN-SUFFIX,log.mmstat.com
 DOMAIN-SUFFIX,log.p3-sign.douyinpic.com
 DOMAIN-SUFFIX,long.fei.somamobi.com
 DOMAIN-SUFFIX,mads.jd.com
 DOMAIN-SUFFIX,mads.taobao.com
 DOMAIN-SUFFIX,marketing.p3-sign.douyinpic.com
-DOMAIN-SUFFIX,mmstat.com
 DOMAIN-SUFFIX,mp.ximalaya.com.eo.dnse1.com
 DOMAIN-SUFFIX,na61-na62.wagbridge.alibaba.tanx.com.gds.alibabadns.com
 DOMAIN-SUFFIX,p3-sign.douyinpic.com.queniusy.com
@@ -1240,7 +1238,6 @@ DOMAIN-SUFFIX,cloud.video.taobao.com
 DOMAIN-SUFFIX,mamasearchad.cloudvideocdn.taobao.com
 DOMAIN-SUFFIX,1254b00002-0.m.ctrmi.cn
 DOMAIN-SUFFIX,sealine.youku.com
-DOMAIN-SUFFIX,passengerapi.saicmobility.com
 DOMAIN-SUFFIX,tencent-ssp.66mobi.com
 DOMAIN-SUFFIX,ssp.iytcdn.com
 DOMAIN-SUFFIX,missile.iytcdn.com
@@ -1743,12 +1740,26 @@ DOMAIN-SUFFIX,xj-landing.gdtimg.com
 DOMAIN-SUFFIX,adstextview.qq.com
 DOMAIN-SUFFIX,op.ssp.qq.com
 DOMAIN-SUFFIX,x.adnet.qq.com
+DOMAIN-SUFFIX,umestartup.umetrip.com
 DOMAIN-SUFFIX,inner-empty.shunchangzhixing.com
 DOMAIN-SUFFIX,api-dsp.8ziben.com
 DOMAIN-SUFFIX,dsp.edm.weibo.cn
 DOMAIN-SUFFIX,bv.brg0.com
 DOMAIN-SUFFIX,udd1i5.zhihu.com
 DOMAIN-SUFFIX,zhihu.xmcimg.com
+DOMAIN-SUFFIX,adse-v2.ximalaya.com
+DOMAIN-SUFFIX,open.ximalaya.com
+DOMAIN-SUFFIX,upos-app.ximalaya.com
+DOMAIN-SUFFIX,adservice.kugou.com
+DOMAIN-SUFFIX,splashimgretrybssdl.cloud.kugou.com
+DOMAIN-SUFFIX,splashimgbssdl.yun.kugou.com
+DOMAIN-SUFFIX,adver.cxzntc.com
+DOMAIN-SUFFIX,cfgc.flysleep.cn
+DOMAIN-SUFFIX,upc.flysleep.cn
+DOMAIN-SUFFIX,yumao.puata.info
+DOMAIN-SUFFIX,cpic.fancydsp.com
+DOMAIN-SUFFIX,c.l.qq.com
+DOMAIN-SUFFIX,u.l.qq.com
 DOMAIN-SUFFIX,24h-ad.24hstatic.com
 DOMAIN-SUFFIX,24h-ipad-ad.24hstatic.com
 DOMAIN-SUFFIX,ad-us.24hstatic.com
@@ -3709,6 +3720,7 @@ DOMAIN-WILDCARD,pangolin*
 DOMAIN-WILDCARD,jad-api.*.com
 DOMAIN-WILDCARD,c-hzgt*.getui.com
 DOMAIN-WILDCARD,v*-dcar-ad.dcarvod.com
+DOMAIN-WILDCARD,*-ad.dcarvod.com
 DOMAIN-WILDCARD,admicro*.vcmedia.vn
 DOMAIN-WILDCARD,log-*.zadn.vn
 DOMAIN-WILDCARD,ad-host-backup-*.*.aliyuncs.com

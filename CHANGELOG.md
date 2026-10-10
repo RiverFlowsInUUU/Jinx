@@ -4,9 +4,15 @@
 
 ---
 
-## 2026-10-10（六）· 规则：白名单新增 `*.za.group`
+## 2026-10-10（六）· 规则：白名单新增 `*.za.group`；上游快照同步 `3.1.9 → 3.2.1`
 
-> 📌 本日第一条。上游数据仍固定在 `3.1.9` 快照，未随本次改动漂移。
+> 📌 本日两条改动。**第一条**只动源头 `custom-direct.list`；**第二条**紧跟上游滚动，重跑生成把两次变动合并进同一份产物。
+
+---
+
+### 一 · 白名单新增 `*.za.group`
+
+> 📌 本日第一条。改前已验证「用上游 `3.1.9` 重跑，六份产物与仓库既有文件逐字节一致」，故本条 diff 不含任何上游漂移。
 
 **变更**
 
@@ -15,7 +21,23 @@
   - 🧩 **根因**：上游直连集（Loyalsoldier `direct.txt` 与 Jinx 白名单）均未收录 `za.group`；同族的 `zainvest.group` / `zafinsvc.com` / `zajourney.com` / `zaticdn.com` 上游都已放行，**只有 `za.group` 一族漏网**。实测大陆可直连、未被墙，故在本仓手工补直连，等上游收录后再删本条。
   - 📐 三份产物同一次重跑生成，条数 45 / 45 / 45 一致；`sing-box` 侧字段构成 `domain=41 domain_suffix=4`（原 3 项 + 本次 1 项）。
   - ✅ **验收（对 diff）**：与改动前对拍，**只出现三处允许的变化** —— 表头 `# entries: 44 → 45`、`# extra-white: custom-direct.list(2) → (3)`、末尾按顺序多出 1 条 `DOMAIN-SUFFIX,za.group`；其余正文**逐行不变**（既有 44 条逐字节相同；sing-box JSON 仅 `domain_suffix` 数组末尾追加 1 项）。README 与 `DetailsReadme` 的条数声明同步 44 → 45，`skill/SKILL.md` 预期读数与 `selftest_negative.py` 的条数锚点一并更新。
-  - 📌 **上游快照未动**：本次重跑固定在上游 `3.1.9`（commit `3fd15f94`）—— 改前已先验证「用该版本重跑，六份产物与仓库既有文件逐字节一致」，故本次 diff 不含任何上游漂移（上游现已是 `3.2.1`）。
+  - 📌 **上游快照未动**：本次重跑固定在上游 `3.1.9`（commit `3fd15f94`），diff 中不含任何上游漂移。
+
+---
+
+### 二 · 上游快照同步 `3.1.9` → `3.2.1`
+
+> 📌 本日第二条。**这是每条规则集镜像都欠的债** —— 上游只增不减，旧快照躺平即等于拦不住新广告、也放不稳新白名单。
+
+**变更**
+
+- 🔄 **上游数据 `3.1.9` → `3.2.1`**（上游 `lastUpdate` `2026-10-09T11:35:12Z`）。上游仓库**无 tag 也无 release**，只有默认分支 `master` 的滚动快照，故快照位以「版本号 + 更新日期」双写记录（`README.md` 与 `DetailsReadme` 各一处表格 + 各一处页脚）。
+  - 🚫 **拦截 3889 → 3901 条（+12）**：`sing-box` 侧 `domain_suffix` `3740 → 3751`、`domain_regex` `149 → 150`。新增含 `umestartup.umetrip.com`（航旅纵横）、`adse-v2.ximalaya.com` / `open.ximalaya.com` / `upos-app.ximalaya.com`（喜马拉雅）、`adservice.kugou.com` 与两条开屏图缓存域（酷狗）、`cpic.fancydsp.com`、`c.l.qq.com` / `u.l.qq.com`、`cfgc.flysleep.cn` / `upc.flysleep.cn`、通配 `*-ad.dcarvod.com` 等。
+  - ✅ **放行 45 → 47 条（+2）**：上游白名单 `325 → 328` 条，过 guard（与黑名单碰撞裁剪）后留存 `42 → 44` 条，加 3 条手工补充（`*.tange365.com` / `*.wechatos.net` / `*.za.group`）。`sing-box` 侧构成为 `domain=43 domain_suffix=4`。
+  - 🧹 **顺带漂移**：上游本轮把 `log.mmstat.com`、`mmstat.com`、`passengerapi.saicmobility.com` 从黑名单移出（交还回直连），并把 `gm.mmstat.com` / `wgo.mmstat.com` 提进白名单 —— 这正是 `mmstat` 系域在上游自家黑/白名单间反复翻面的老问题，本仓只如实转换，不替上游做判断。
+  - 🔧 **同步了版本号与读数的地方**：`README.md` Source 徽章 / 拦截徽章 / 放行徽章 / 订阅表 3 行 / 能力矩阵 2 行 / 页脚上游行；`DetailsReadme/DetailsReadme.md` 订阅表 6 行 / 「白名单怎么来的」推导句 / 页脚上游行；`skill/SKILL.md` 预期读数行；`skill/tests/selftest_negative.py` 的条数锚点（负样本必须跟着真实读数走，否则自测会静默失效）；`skill/tests/verify_jinx_src.py` 注释里的示例读数；`.github/workflows/ci.yml` 的「上游快照」注释。
+  - ✅ **闸门**：`verify_jinx_src.py` **59 passed / 0 failed**（含第 6 段六份产物逐字节可复现）；`selftest_negative.py` **9 抓到 / 0 漏报**。
+  - 📐 **验收（对 diff）**：产物侧只有表头 `# entries` / `# extra-*` 行变化 + 正文中上游实际增删的条目；`custom-*.list` 手工条目 **3 条形制未动**，仍落在产物末尾。
 
 ---
 

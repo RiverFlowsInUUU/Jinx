@@ -120,7 +120,7 @@ python $SK --src ./jinx-rules --out ./out --fixed whitelist.txt --wild whitelist
     --extra-white ./custom-direct.list
 ```
 
-预期读数：`ads 3889` / `direct 45`（上游白名单 325 条 → guard 裁到 42，再 +3 extra-white：`*.tange365.com`、`*.wechatos.net`、`*.za.group`）；sing-box 侧 `ads: domain_suffix=3740 domain_regex=149` / `direct: domain=41 domain_suffix=4`。
+预期读数：`ads 3901` / `direct 47`（上游白名单 328 条 → guard 裁到 44，再 +3 extra-white：`*.tange365.com`、`*.wechatos.net`、`*.za.group`）；sing-box 侧 `ads: domain_suffix=3751 domain_regex=150` / `direct: domain=43 domain_suffix=4`。
 ⚠️ 这行读数**随源头漂**，写完必跑下方闸门核对 —— 它同时校验文档声明与产物实际，读数字对不上会当场判负。
 
 **验收**：改动前后对 diff，**只允许三处变化** —— 表头 `# entries` 数字、`# extra:` 那一行、末尾按顺序多出/少掉 N 条；其余正文**逐行不变**。

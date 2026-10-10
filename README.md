@@ -6,7 +6,7 @@
 
 上游 Jinx 黑/白名单的格式转换 · 规则一条不增不减
 
-[![Source](https://img.shields.io/badge/Source-Jinx%203.1.9-8250df?style=flat-square)](https://github.com/VME98/jinx-rules)
+[![Source](https://img.shields.io/badge/Source-Jinx%203.2.1-8250df?style=flat-square)](https://github.com/VME98/jinx-rules)
 [![License](https://img.shields.io/badge/License-%E6%9C%AA%E5%A3%B0%E6%98%8E-critical?style=flat-square)](#-来源与许可)
 
 [![mihomo](https://img.shields.io/badge/mihomo-OpenClash-1f6feb?style=flat-square)](#-接入)
@@ -15,8 +15,8 @@
 [![sing-box](https://img.shields.io/badge/sing--box-source%20JSON-blue?style=flat-square)](#-接入)
 [![CI](https://github.com/RiverFlowsInUUU/Jinx/actions/workflows/ci.yml/badge.svg)](https://github.com/RiverFlowsInUUU/Jinx/actions/workflows/ci.yml)
 
-[![Ads](https://img.shields.io/badge/%E6%8B%A6%E6%88%AA-3889%20%E6%9D%A1-0969da?style=flat-square)](#-订阅)
-[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-45%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
+[![Ads](https://img.shields.io/badge/%E6%8B%A6%E6%88%AA-3901%20%E6%9D%A1-0969da?style=flat-square)](#-订阅)
+[![White](https://img.shields.io/badge/%E6%94%BE%E8%A1%8C-47%20%E6%9D%A1-2da44e?style=flat-square)](#-订阅)
 [![AWAvenue](https://img.shields.io/badge/%E7%A7%8B%E9%A3%8E-965%20%E6%9D%A1-f9c513?style=flat-square)](#-订阅)
 
 </div>
@@ -43,9 +43,9 @@
 
 | <div align="center">客户端</div> | <div align="center">🚫 拦截规则集</div> | <div align="center">✅ 放行规则集</div> |
 |:--|:--|:--|
-| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3889` | [`mihomo-direct.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml) `45` |
-| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3889` | [`surge-direct.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list) `45` |
-| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3889` | [`sing-box-direct.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-direct.json) `45` |
+| **mihomo** / OpenClash | [`mihomo-ads.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-ads.yaml) `3901` | [`mihomo-direct.yaml`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/mihomo-direct.yaml) `47` |
+| **Surge** / **Egern** | [`surge-ads.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-ads.list) `3901` | [`surge-direct.list`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/surge-direct.list) `47` |
+| **sing-box** | [`sing-box-ads.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-ads.json) `3901` | [`sing-box-direct.json`](https://raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/sing-box-direct.json) `47` |
 
 📌 表内链接指向 **Raw GitHub**（首选源）。要换成 jsDelivr 备用源，把
 `raw.githubusercontent.com/RiverFlowsInUUU/Jinx/main/` 换成 `cdn.jsdelivr.net/gh/RiverFlowsInUUU/Jinx@main/` 即可。
@@ -73,12 +73,12 @@
 
 | <div align="center">维度</div> | <div align="center">Jinx 规则集</div> | <div align="center">说明</div> |
 |:--|:--|:--|
-| 🚫 拦截 | **3889 条** | 3740 条域名后缀 + 149 条中缀通配 |
-| ✅ 放行 | **45 条** | 41 条精确 + 4 条后缀（含 3 条手工补充） |
+| 🚫 拦截 | **3901 条** | 3751 条域名后缀 + 150 条中缀通配 |
+| ✅ 放行 | **47 条** | 43 条精确 + 4 条后缀（含 3 条手工补充） |
 | 🧩 各端一致 | **逐条等价** | mihomo / Surge / Egern / sing-box 归一化后零差异 |
 | 🎯 增删 | **一条不增不减** | 只做格式转换，不改上游判定 |
 | 🔄 可复现 | **逐字节一致** | 产物 == 源头重跑结果，CI 对拍 |
-| 📌 上游快照 | `3.1.9` · `2026-09-15` | 上游更新后需重跑生成 |
+| 📌 上游快照 | `3.2.1` · `2026-10-09` | 上游更新后需重跑生成 |
 
 🚫 **只做减法不做加法**：本仓不替你判断"哪些广告该拦"，上游收录什么就转什么。唯一例外是 `custom-*.list` 里人工补充的域名，每一条都写明依据。
 
@@ -274,7 +274,7 @@ uci commit openclash
 
 | <div align="center">项</div> | <div align="center">说明</div> |
 |:--|:--|
-| 📄 上游 | [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules) · 数据 `3.1.9` · `2026-09-15` |
+| 📄 上游 | [`VME98/jinx-rules`](https://github.com/VME98/jinx-rules) · 数据 `3.2.1` · `2026-10-09` |
 | 📜 许可 | 上游未声明（`license: null`），本仓亦不主张 |
 | 🧬 规则数据 | 版权归上游及其原始来源 |
 | 🧪 `skill/` | 转换脚本与方法论，不含上游数据，可自由取用 |

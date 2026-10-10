@@ -3,6 +3,8 @@
   "rules": [
     {
       "domain": [
+        "gm.mmstat.com",
+        "wgo.mmstat.com",
         "zlink.ugsdk.cn",
         "praisewindow.ugsdk.cn",
         "cactus.jd.com",
