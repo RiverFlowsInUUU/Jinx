@@ -23,7 +23,6 @@ DOMAIN,search-app-m.i4.cn
 DOMAIN,pub-conf-m.i4.cn
 DOMAIN,cl-m.i4.cn
 DOMAIN,list-app-m.i4.cn
-DOMAIN,p.l.qq.com
 DOMAIN,appcfg.v.qq.com
 DOMAIN,nbfriend-mtop.cainiao.com
 DOMAIN,httpdns.meituan.com
@@ -31,7 +30,6 @@ DOMAIN,sdk.open.talk.getui.net
 DOMAIN,sdk.open.talk.gepush.com
 DOMAIN,oneid.gepush.com
 DOMAIN,oneid.getui.net
-DOMAIN,aedns.weixin.qq.com
 DOMAIN,apd-pcdnwxlogin.teg.tencent-cloud.net
 DOMAIN,apd-pcdnwxnat.teg.tencent-cloud.net
 DOMAIN,apd-pcdnwxstat.teg.tencent-cloud.net
@@ -46,6 +44,8 @@ DOMAIN,status-ipv6.jpush.cn
 DOMAIN,tsis-ipv6.jpush.cn
 DOMAIN,tsis.jpush.cn
 DOMAIN,seeds-sina.xycdn.com
+DOMAIN,httpdns.qq.com
+DOMAIN,httpdns.yunxinfw.com
 DOMAIN-SUFFIX,wagbridge.alsc-prd.tanx.com
 DOMAIN-SUFFIX,tange365.com
 DOMAIN-SUFFIX,wechatos.net

@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-10-22（四）· 上游快照同步 `3.2.1 → 3.2.3`
+
+> 📌 距上一次上游同步（2026-10-10）隔了 12 天，上游又滚了两版。本次严格按 `skill/SKILL.md`
+> 「上游滚动时的标准流程」四步执行：删干净重取上游源 → 重跑两条生成命令 → `sync_docs.py`
+> 推平文档读数 → 跑两道闸门。**规则内容变动全部来自上游，本仓未做任何人工判断。**
+
+**变更**
+
+- 🔄 **上游数据 `3.2.1` → `3.2.3`**（上游 `lastUpdate` `2026-10-18T12:30:33Z`）。上游仓库**无 tag 也无 release**，只有默认分支 `master` 的滚动快照，故快照位仍以「版本号 + 更新日期」双写记录。
+  - 🚫 **拦截 3901 → 3991 条（+90）**：上游黑名单 `3726 + 264` 条 → 产物 3991（`sing-box` 侧 `domain_suffix` `3751 → 3833`、`domain_regex` `150 → 158`）。新增 94 条、移除 4 条。
+    - 新增含阿里妈妈系一整族（`acookie.alimama.com` / `afpapi.alimama.com` / `afpeng.alimama.com` / `afpssp.alimama.com` / `afptrack.alimama.com`）、字节系（`adcanvas.com` / `adsrvr.cn` / `dsp-ad.yy.com` / `splash.yy.com` / `ysad.yy.com`）、`byteadverts.com`、`fancydsp.com`、搜狐（`ad.seeyouyima.com` / `adshows.21cn.com` / `admarket.21cn.com`）、网易（`adsys.nineton.cn`）、爱奇艺（`ad.h5-cdn.soulapp.cn` / `ad-h5-station-cdn.soulapp.cn`）、腾讯广告（`ads.privacy.qq.com`）、`unityads.unitychina.cn`、快手（`kad.gotokeep.com`）、`adscope.cn` / `adscope.xyz`（与既有 `adscope.com` / `adscope.com.cn` 同族）、`statis.miwuad.com`（小米）等。
+    - 通配新增 `adstrategy`、`httpdns` 系列（`^.*httpdns.*$` / `^httpdns.*$`）等 8 条正则。
+    - 移除 4 条 —— 上游把它们从黑名单交还直连：`dns.weixin.qq.com`、`httpsdns.baidu.com`、`lf-cdn-tos.bytescm.com`（上游两处名单均已不再收录）、`httpdns.meituan.com`（**上游已将其提进白名单**，本仓放行侧同步收录，见下）。
+  - ✅ **放行 47 → 47 条（±2 换血，条数不变）**：上游白名单 `328 → 324` 条，过 guard（与黑名单碰撞裁剪）后留存 `44 → 44` 条，加 3 条手工补充（`*.tange365.com` / `*.wechatos.net` / `*.za.group`）—— 仍为 47 条。
+    - 🔀 **换血明细**：新增 `httpdns.qq.com` / `httpdns.yunxinfw.com`（上游提进白名单）；移除 `p.l.qq.com` / `aedns.weixin.qq.com`（上游本轮把这两个域**移入黑名单**）。`sing-box` 侧构成仍为 `domain=43 domain_suffix=4`。
+    - 📌 手工补充的 3 条 `custom-direct.list` 条目**形制未动**，仍落在产物末尾。
+  - 🔧 **同步了版本号与读数的地方**：`README.md` Source 徽章 / 拦截徽章 / 订阅表 3 行 / 能力矩阵拦截行 / 上游快照行 / 页脚上游行；`DetailsReadme/DetailsReadme.md` 订阅表 3 行 / 「白名单怎么来的」推导句 / 页脚上游行；`skill/SKILL.md` 预期读数行；`.github/workflows/ci.yml` 的「上游快照」注释；`skill/tests/verify_jinx_src.py` 注释里的示例读数。（`sync_docs.py` 写 14 处，其余 2 处为脚本不覆盖的注释，同步惯例一并跟进。）
+  - ✅ **闸门**：`verify_jinx_src.py` **68 passed / 0 failed**（含第 6 段六份产物逐字节可复现、第 5b 段文档版本号、第 6b 段合并基线）；`selftest_negative.py` **12 抓到 / 0 漏报**。
+  - 📐 **验收（对 diff）**：产物侧只有表头 `# entries` / `# extra-*` 行变化 + 正文中上游实际增删的条目（拦截 +94 −4，放行 +2 −2）；`custom-*.list` 手工条目 3 条形制未动。**未手改任何一条规则内容。**
+
+---
+
 ## 2026-10-10（六）· 机制：上游同步从「靠自觉」改为「可执行流程」
 > 📌 本日第三条，也是唯一一条**不改任何规则内容**的改动。它源于本日第一条的一次真实失误，此处不粉饰 —— 留痕才有价值。
 

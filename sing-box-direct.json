@@ -23,7 +23,6 @@
         "pub-conf-m.i4.cn",
         "cl-m.i4.cn",
         "list-app-m.i4.cn",
-        "p.l.qq.com",
         "appcfg.v.qq.com",
         "nbfriend-mtop.cainiao.com",
         "httpdns.meituan.com",
@@ -31,7 +30,6 @@
         "sdk.open.talk.gepush.com",
         "oneid.gepush.com",
         "oneid.getui.net",
-        "aedns.weixin.qq.com",
         "apd-pcdnwxlogin.teg.tencent-cloud.net",
         "apd-pcdnwxnat.teg.tencent-cloud.net",
         "apd-pcdnwxstat.teg.tencent-cloud.net",
@@ -45,7 +43,9 @@
         "status-ipv6.jpush.cn",
         "tsis-ipv6.jpush.cn",
         "tsis.jpush.cn",
-        "seeds-sina.xycdn.com"
+        "seeds-sina.xycdn.com",
+        "httpdns.qq.com",
+        "httpdns.yunxinfw.com"
       ],
       "domain_suffix": [
         "wagbridge.alsc-prd.tanx.com",
