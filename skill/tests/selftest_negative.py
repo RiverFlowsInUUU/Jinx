@@ -16,6 +16,7 @@
 """
 import io
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -87,18 +88,20 @@ def _(w):
     两种都试，确保本负样本在版式演进后依然有效。
     实测教训（2026-10-04）：只匹配形态 A 时，README 改成形态 B 后本负样本
     静默失效（改不动文件 → 断言自然不报错 → 被误读成「漏报」）。
+    实测教训（2026-10-23）：条数曾硬编码 `47`，放行集长到 `48` 后两串再次
+    全部落空；改为正则匹配任意条数，只把捕获到的数字替换成 `50`。
     """
     p = w / 'README.md'
     t = p.read_text(encoding='utf-8')
-    for old, new in [
-        ('[`surge-direct.list`](https://raw.githubusercontent.com/'
-         'RiverFlowsInUUU/Jinx/main/surge-direct.list) `47`',
-         '[`surge-direct.list`](https://raw.githubusercontent.com/'
-         'RiverFlowsInUUU/Jinx/main/surge-direct.list) `50`'),
-        ('| `surge-direct.list` | 47 |', '| `surge-direct.list` | 50 |'),
-    ]:
-        if old in t:
-            t = t.replace(old, new)
+    pats = [
+        r'(\[`surge-direct\.list`\]\(https://raw\.githubusercontent\.com/'
+        r'RiverFlowsInUUU/Jinx/main/surge-direct\.list\)\s*`)\d+(`)',
+        r'(\| `surge-direct\.list` \| )\d+( \|)',
+    ]
+    for pat in pats:
+        m = re.search(pat, t)
+        if m:
+            t = t[:m.start(2)] + '50' + t[m.end(2):]
             break
     else:
         raise AssertionError('负样本失效：README 订阅表两种形态都没匹配到')
@@ -185,12 +188,15 @@ def _(w):
     ⚠️ 这类缺陷肉眼在 GitHub 默认字体下几乎看不出（宽度相近），
        只有终端 / 等宽字体 / 部分移动端才明显 —— 故必须机械判定，
        本负样本守的就是这条判据。
+
+    📌 条数不硬编码：2026-10-23 放行集 47 → 48 时此处曾因写死 `**47 条**`
+       而失效；改为只替换行首的「✅ 放行」标志，条数随当前表格保留。
     """
     p = w / 'README.md'
     t = p.read_text(encoding='utf-8')
-    old = '| ✅ 放行 | **47 条** |'
+    old = '| ✅ 放行 |'
     assert old in t, '负样本失效：能力矩阵的放行行已改版'
-    p.write_text(t.replace(old, '| 🛡️ 放行 | **47 条** |', 1), encoding='utf-8')
+    p.write_text(t.replace(old, '| 🛡️ 放行 |', 1), encoding='utf-8')
 
 
 @case('半同步：上游源前进了但产物没重跑（拿旧版合并）', '重跑结果与仓库文件')

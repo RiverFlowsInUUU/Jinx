@@ -34,6 +34,14 @@
 #                 只有 za.group 一族漏网。实测大陆可直连、未被墙，故在此强制直连。
 #                 📌 上游收录后可删本条（产物由生成链同步，无需手改）。
 #
+# *.itunes.apple.com  Apple iTunes Store 业务域。2026-10-23 追加，用户指定放行。
+#                 语义：任何前缀 + itunes.apple.com 都直连 —— 经 DOMAIN-SUFFIX,itunes.apple.com
+#                 覆盖裸域与任意层级子域（与「前缀任意」等价，裸域本身也一并直连）。
+#                 上游白名单只有精确条目 itunes.apple.com / pd.itunes.apple.com /
+#                 iosapps.itunes.apple.com；且 guard 会因它们不与黑名单碰撞而裁掉，
+#                 其余 itunes.apple.com 子域落进兜底走代理。本条目补的正是子域面。
+#
 *.tange365.com
 *.wechatos.net
 *.za.group
+*.itunes.apple.com

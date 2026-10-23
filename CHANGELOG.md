@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-10-23（五）· 放行 47 → 48：新增 `*.itunes.apple.com`
+
+> 📌 用户指定：任何前缀 + `itunes.apple.com` 都走直连。沿 `skill/SKILL.md` 的手工域名流程执行：
+> 改 `custom-direct.list` → 重跑生成 → `sync_docs.py` 推平读数 → 双闸门。本次上游无滚动
+> （仍为 `3.2.3`），规则变动全部来自手工放行。
+
+**变更**
+
+- ✅ **放行 47 → 48 条**：`custom-direct.list` 追加 `*.itunes.apple.com`（第 4 条手工补充），生成 `DOMAIN-SUFFIX,itunes.apple.com` —— 覆盖裸域与任意层级子域，语义 = 任何前缀 + `itunes.apple.com`。
+  - 依据：上游白名单只有精确条目 `itunes.apple.com` / `pd.itunes.apple.com` / `iosapps.itunes.apple.com`，且 guard 会因它们不与黑名单碰撞而裁掉；其余 `itunes.apple.com` 子域落进兜底走代理。本条目补的正是子域面。
+  - 产物构成：`43 条精确 + 5 条后缀`（其中 4 条手工补充）。`from guard 44` 不变，本条落在产物末尾，不参与碰撞裁剪。
+- 🐛 **负样本两处硬编码失效修复**：放行集 `47 → 48` 后，`selftest_negative.py` 的「README 订阅表」与「能力矩阵放行行」两个负样本因写死 `47` 而匹配落空（抛出「负样本失效」）。改为正则 / 行首标志动态匹配 —— 条数不再作为锚点，避免规则集条数变化时自测静默失效。
+- 🔧 **读数同步**：`README.md` 放行徽章 / 订阅表 3 行 / 矩阵放行行；`DetailsReadme/DetailsReadme.md` 订阅表 3 行 / 「白名单怎么来的」推导句；`skill/SKILL.md` 预期读数行（`sync_docs.py` 写 9 处，推导句 1 处手改）。
+- ✅ **闸门**：`verify_jinx_src.py` **68 passed / 0 failed**（含第 6 段三份 direct 产物逐字节可复现）；`selftest_negative.py` **12 抓到 / 0 漏报**。
+
+**验收（对 diff）**
+
+- 三份 direct 产物只多 `DOMAIN-SUFFIX,itunes.apple.com` 一条 + 表头 `# entries`（47 → 48）/ `# extra-white`（3 → 4）行变化；ads 三份产物零改动。
+- `custom-direct.list` 新增 1 条域名与对应依据注释，其余 3 条手工条目形制未动。
+
+---
+
 ## 2026-10-22（四）· 上游快照同步 `3.2.1 → 3.2.3`
 
 > 📌 距上一次上游同步（2026-10-10）隔了 12 天，上游又滚了两版。本次严格按 `skill/SKILL.md`
